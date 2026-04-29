@@ -216,33 +216,34 @@ button:focus-visible, .nav-item:focus-visible, .proj-item:focus-visible, .tb-btn
   font-style:italic; color:var(--orange-mid); font-weight:500;
 }
 
-/* ── SIDEBAR : header avec logo Mabya intégré au fond vert ── */
+/* ── SIDEBAR : header avec logo Mabya officiel sur fond blanc ── */
 .sb-logo {
-  padding:24px 22px 20px;
-  background:var(--green-700);   /* Vert deep cohérent avec la sidebar (légèrement plus foncé) */
-  border-bottom:1px solid rgba(255,255,255,.08);
+  padding:18px 18px 16px;
+  background:#FFFFFF;            /* Fond blanc fidèle à la charte officielle Mabya */
+  border-bottom:3px solid var(--green-deep);
   position:relative;
 }
+.sb-logo .brand-logo svg { width:100%; height:auto; max-width:200px; display:block; margin:0 auto; }
 .sb-logo .brand-logo svg { width:180px; height:auto; display:block; }
 .sb-logo .product-line {
   display:flex; align-items:center; gap:8px;
-  margin-top:14px; padding-top:14px;
-  border-top:1px solid rgba(255,255,255,.08);
+  margin-top:12px; padding-top:10px;
+  border-top:1px solid #E5E9F0;
 }
 .sb-logo .product-line .product-tag {
-  font-size:10.5px; font-weight:700; color:#fff; letter-spacing:2.5px;
+  font-size:10.5px; font-weight:800; color:var(--green-deep); letter-spacing:3px;
   text-transform:uppercase;
 }
 .sb-logo .product-line .product-divider {
-  flex:1; height:1px; background:rgba(255,255,255,.12);
+  flex:1; height:1px; background:#E5E9F0;
 }
 .sb-logo .product-line .product-mark {
-  width:8px; height:8px;
+  width:9px; height:9px;
   clip-path: polygon(50% 0%, 100% 70%, 80% 100%, 50% 35%, 20% 100%, 0% 70%);
   background:var(--orange-500);
 }
 .sb-logo .subtitle {
-  font-size:11px; color:rgba(255,255,255,.55); margin-top:8px;
+  font-size:11px; color:var(--text2); margin-top:6px;
   letter-spacing:.3px; line-height:1.5;
 }
 
@@ -1828,21 +1829,20 @@ input[type="date"], input[type="number"] { width:100%; }
     <!-- Header avec logo Mabya Holding (SVG inline fidèle au logo officiel) -->
     <div class="sb-logo">
       <div class="brand-logo" aria-label="Mabya Holding">
-        <svg viewBox="0 0 280 110" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMid meet">
-          <!-- Wordmark "MABY" en blanc gras geometric (style Eurostile-like) -->
-          <text x="0" y="58" font-family="'Avenir Next', 'Helvetica Neue', Arial, sans-serif"
-                font-weight="900" font-size="62" fill="#FFFFFF" letter-spacing="-3"
-                style="font-stretch:condensed;">MABY</text>
+        <svg viewBox="0 0 660 280" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMid meet">
+          <!-- Wordmark "MABY" en navy profond (lettres très épaisses geometric) -->
+          <text x="0" y="200" font-family="'Avenir Next', 'Helvetica Neue', Arial Black, sans-serif"
+                font-weight="900" font-size="220" fill="#1B2A4A" letter-spacing="-8">MABY</text>
 
-          <!-- Le "A" final = deux triangles pleins SUPERPOSÉS (effet 3D Mabya) -->
-          <!-- Triangle arrière : orange foncé, légèrement plus à gauche/bas -->
-          <path d="M 156 64 L 195 6 L 234 64 Z" fill="#B8391A"/>
-          <!-- Triangle avant : orange vif, par-dessus avec léger décalage haut/droite -->
-          <path d="M 168 60 L 207 2 L 246 60 Z" fill="#E2502F"/>
+          <!-- Le "A" final = deux chevrons orange superposés (signature Mabya) -->
+          <!-- Chevron arrière (gauche, orange foncé, légèrement plus bas) -->
+          <path d="M 478 200 L 555 50 L 632 200 Z" fill="#D24820"/>
+          <!-- Chevron avant (droite, orange clair vif, légèrement plus haut) -->
+          <path d="M 522 200 L 605 38 L 688 200 Z" fill="#F47445" transform="translate(-30 0)"/>
 
-          <!-- "Holding" en pied — aligné sous "BY", letter-spacing large, couleur gris cassé -->
-          <text x="68" y="92" font-family="'Avenir Next', 'Helvetica Neue', Arial, sans-serif"
-                font-weight="500" font-size="20" fill="#C8D1DD" letter-spacing="6">Holding</text>
+          <!-- "Holding" en gris, aligné sous "BYA" en bas à droite -->
+          <text x="450" y="260" font-family="'Avenir Next', 'Helvetica Neue', Arial, sans-serif"
+                font-weight="500" font-size="58" fill="#8C8C8C" letter-spacing="0">Holding</text>
         </svg>
       </div>
 
