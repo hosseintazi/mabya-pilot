@@ -1829,20 +1829,19 @@ input[type="date"], input[type="number"] { width:100%; }
     <!-- Header avec logo Mabya Holding (SVG inline fidèle au logo officiel) -->
     <div class="sb-logo">
       <div class="brand-logo" aria-label="Mabya Holding">
-        <svg viewBox="0 0 1100 320" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMid meet">
-          <!-- Wordmark "MABY" : on force textLength=720 pour rendu prévisible
-               quelle que soit la police de fallback du navigateur -->
+        <svg viewBox="0 0 1180 320" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMid meet">
+          <!-- Wordmark "MABY" : textLength=720 pour rendu prévisible -->
           <text x="0" y="220" font-family="'Avenir Next', 'Helvetica Neue', 'Arial Black', sans-serif"
                 font-weight="900" font-size="240" fill="#1B2A4A"
                 textLength="720" lengthAdjust="spacing">MABY</text>
 
-          <!-- Les 2 chevrons formant le "A" final, juste après le Y (à partir de x=740) -->
-          <!-- Chevron ARRIÈRE (gauche, sommet plus bas, orange foncé saturé) -->
-          <path d="M 740 220 L 815 60 L 890 220 Z" fill="#C53A18"/>
-          <!-- Chevron AVANT (droite, sommet plus haut et plus à droite, orange clair vif) -->
-          <path d="M 830 220 L 920 22 L 1010 220 Z" fill="#ED7045"/>
+          <!-- Le "A" final = triangle plein (gauche) + parallélogramme incliné / (droite) -->
+          <!-- Triangle plein (chevron gauche, orange foncé saturé) — moitié gauche du "A" -->
+          <path d="M 745 220 L 825 60 L 905 220 Z" fill="#C53A18"/>
+          <!-- Parallélogramme incliné (branche droite du "A", orange clair vif) -->
+          <path d="M 920 220 L 970 30 L 1070 30 L 1020 220 Z" fill="#ED7045"/>
 
-          <!-- "Holding" en gris, aligné à droite sous les chevrons -->
+          <!-- "Holding" en gris, aligné à droite sous le bloc "A" -->
           <text x="725" y="305" font-family="'Avenir Next', 'Helvetica Neue', Arial, sans-serif"
                 font-weight="500" font-size="80" fill="#8C8C8C" letter-spacing="0">Holding</text>
         </svg>
