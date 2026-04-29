@@ -6472,8 +6472,34 @@ function exportProjetCompletPDF() {
     }
   }
 
+  // ── Helper : nettoyer le markdown inline + caractères spéciaux pour rendu PDF
+  // - Strip **bold** et __bold__ (jsPDF n'a pas le rendering inline)
+  // - Strip _italic_ inline (la typo italic est appliquée au niveau bloc via setFont)
+  // - Décode entités HTML communes
+  // - Normalise les espaces insécables U+202F / U+00A0 en espace standard
+  //   (évite que toLocaleString('fr-FR') affiche des "/" parasites dans le PDF)
+  // - Remplace certains emojis non rendus par des équivalents ASCII / simples
+  function cleanText(s) {
+    return String(s == null ? '' : s)
+      .replace(/\*\*(.+?)\*\*/g, '$1')        // **bold** → bold
+      .replace(/__(.+?)__/g, '$1')            // __bold__ → bold
+      .replace(/(?<![a-zA-Z0-9])_([^_\n]+)_(?![a-zA-Z0-9])/g, '$1')   // _italic_ inline → italic
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/[  ]/g, ' ')        // espaces insécables → espace standard
+      .replace(/⚠️/g, '⚠')                    // emoji warning : retirer le sélecteur
+      .replace(/💡/g, '►')                    // light bulb non rendu → flèche
+      .replace(/✓/g, '✓')                     // garder
+      .replace(/✗/g, '✗')                     // garder
+      .replace(/[​‌‍﻿]/g, '');   // zero-width chars
+  }
+
   // Titre H1 (vert deep avec liseré orange à gauche)
   function addH1(text) {
+    text = cleanText(text);
     ensureSpace(16);
     setFill(ORANGE);
     doc.rect(M, y - 4, 3, 10, 'F');
@@ -6486,6 +6512,7 @@ function exportProjetCompletPDF() {
 
   // Titre H2 (vert deep souligné)
   function addH2(text) {
+    text = cleanText(text);
     ensureSpace(10);
     setText(GREEN_DEEP);
     doc.setFont('helvetica','bold');
@@ -6499,6 +6526,7 @@ function exportProjetCompletPDF() {
 
   // Titre H3 (orange uppercase)
   function addH3(text) {
+    text = cleanText(text);
     ensureSpace(8);
     setText(ORANGE);
     doc.setFont('helvetica','bold');
@@ -6509,6 +6537,7 @@ function exportProjetCompletPDF() {
 
   // Note italique en callout vert
   function addNote(text) {
+    text = cleanText(text);
     const lines = doc.splitTextToSize(text, CONTENT_W - 8);
     const h = lines.length * 4 + 4;
     ensureSpace(h + 2);
@@ -6525,8 +6554,9 @@ function exportProjetCompletPDF() {
 
   // Bullet (3 niveaux)
   function addBullet(text, level) {
+    text = cleanText(text);
     const indent = level * 5;
-    const bulletChar = ['•', '◦', '▪'][Math.min(level,2)];
+    const bulletChar = ['•', '-', '·'][Math.min(level,2)];   // — caractères ASCII robustes pour helvetica
     const bulletColor = [GREEN_DEEP, GREEN_LIGHT, ORANGE][Math.min(level,2)];
     const lines = doc.splitTextToSize(text, CONTENT_W - indent - 6);
     const h = lines.length * 4.2;
@@ -6544,6 +6574,7 @@ function exportProjetCompletPDF() {
 
   // Paragraphe simple
   function addPara(text) {
+    text = cleanText(text);
     const lines = doc.splitTextToSize(text, CONTENT_W);
     ensureSpace(lines.length * 4 + 2);
     setText(TEXT);
@@ -6562,8 +6593,17 @@ function exportProjetCompletPDF() {
   function addTable(header, rows) {
     if (!header || !header.length) return;
     const cols = header.length;
-    // Calcul largeurs : 1ère col plus large si labels (≈ 30 % du tableau pour ≥ 3 cols)
-    const firstColRatio = cols >= 3 ? 0.32 : 1 / cols;
+    // Nettoyage des cellules (markdown inline + espaces)
+    header = header.map(cleanText);
+    rows = rows.map(r => r.map(cleanText));
+    // Calcul largeurs adaptatif :
+    // - Si la 1ère colonne contient des labels courts (R1/R2…, ID numéros) → largeur égale
+    // - Sinon → 1ère col plus large (32 %)
+    const firstColAvgLen = rows.length
+      ? rows.reduce((acc, r) => acc + (r[0] || '').length, 0) / rows.length
+      : 0;
+    const firstColShort = firstColAvgLen <= 5;
+    const firstColRatio = (cols >= 3 && !firstColShort) ? 0.32 : 1 / cols;
     const otherColW = CONTENT_W * (1 - firstColRatio) / Math.max(1, cols - 1);
     const colW = (i) => i === 0 ? CONTENT_W * firstColRatio : otherColW;
     const colX = (i) => M + (i === 0 ? 0 : CONTENT_W * firstColRatio + (i - 1) * otherColW);
@@ -6890,8 +6930,8 @@ function exportProjetCompletPDF() {
           ['CA HT',           fmt(r.n.ca),     fmt(r.n1.ca),    fmt(r.n2.ca)],
           ['Charges variables', fmt(-r.n.cv),  fmt(-r.n1.cv),   fmt(-r.n2.cv)],
           ['Marge brute',     fmt(r.n.mb),     fmt(r.n1.mb),    fmt(r.n2.mb)],
-          ['MO directe',      fmt(-r.n.moDir), fmt(-r.n1.moDir),fmt(-r.n2.moDir)],
-          ['MO support',      fmt(-r.n.moSup), fmt(-r.n1.moSup),fmt(-r.n2.moSup)],
+          ['MO directe',      fmt(-r.n.moDirect), fmt(-r.n1.moDirect),fmt(-r.n2.moDirect)],
+          ['MO support',      fmt(-r.n.moSupport), fmt(-r.n1.moSupport),fmt(-r.n2.moSupport)],
           ['CFD',             fmt(-r.n.cfd),   fmt(-r.n1.cfd),  fmt(-r.n2.cfd)],
           ['CFI',             fmt(-r.n.cfi),   fmt(-r.n1.cfi),  fmt(-r.n2.cfi)],
           ['EBITDA',          fmt(r.n.ebitda), fmt(r.n1.ebitda),fmt(r.n2.ebitda)],
@@ -7327,6 +7367,17 @@ function exportProjetCompletPPTX() {
     s.addText('« Comprendre pour mieux conseiller »', { x:7.5, y:7.1, w:5.5, h:0.3, fontSize:10, italic:true, color:ORANGE, align:'right', fontFace:'Calibri' });
     s.addText('Mabya × L4A Agency  |  ' + new Date().toLocaleDateString('fr-FR'), { x:0.4, y:7.1, w:6, h:0.3, fontSize:9, color:TEXT3, fontFace:'Calibri' });
   }
+  // Nettoyage markdown inline + caractères spéciaux pour rendu PPTX
+  function cleanText(s) {
+    return String(s == null ? '' : s)
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      .replace(/__(.+?)__/g, '$1')
+      .replace(/(?<![a-zA-Z0-9])_([^_\n]+)_(?![a-zA-Z0-9])/g, '$1')
+      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+      .replace(/[  ]/g, ' ')         // espaces insécables → espace standard
+      .replace(/[​‌‍﻿]/g, '');
+  }
   function addTitle(s, num, name) {
     // Bandeau vert deep avec liseré orange
     s.addShape('rect', { x:0, y:0, w:13.33, h:0.95, fill:{color:GREEN_DEEP} });
@@ -7402,44 +7453,56 @@ function exportProjetCompletPPTX() {
       if (y > 6.7) flushSlide();
 
       if (b.type === 'h2') {
+        const txt = cleanText(b.text);
         if (y > 6.5) flushSlide();
-        s.addText(b.text, { x, y, w, h:0.4, fontSize:16, bold:true, color:GREEN_DEEP, fontFace:'Calibri' });
+        s.addText(txt, { x, y, w, h:0.4, fontSize:16, bold:true, color:GREEN_DEEP, fontFace:'Calibri' });
         s.addShape('rect', { x, y:y+0.38, w:0.8, h:0.04, fill:{color:GREEN_LIGHT} });
         y += 0.5;
       } else if (b.type === 'h3') {
+        const txt = cleanText(b.text);
         if (y > 6.5) flushSlide();
-        s.addText('▸ ' + b.text, { x, y, w, h:0.3, fontSize:12, bold:true, color:ORANGE, fontFace:'Calibri', charSpacing:1 });
+        s.addText('▸ ' + txt, { x, y, w, h:0.3, fontSize:12, bold:true, color:ORANGE, fontFace:'Calibri', charSpacing:1 });
         y += 0.35;
       } else if (b.type === 'note') {
+        const txt = cleanText(b.text);
         const h = 0.4;
         if (y + h > 6.7) flushSlide();
         s.addShape('rect', { x, y, w, h, fill:{color:GREEN_BG} });
         s.addShape('rect', { x, y, w:0.06, h, fill:{color:GREEN_LIGHT} });
-        s.addText(b.text, { x:x+0.18, y, w:w-0.18, h, fontSize:10, italic:true, color:GREEN_DEEP, fontFace:'Calibri', valign:'middle' });
+        s.addText(txt, { x:x+0.18, y, w:w-0.18, h, fontSize:10, italic:true, color:GREEN_DEEP, fontFace:'Calibri', valign:'middle' });
         y += h + 0.1;
       } else if (b.type === 'para') {
-        const lines = Math.ceil(b.text.length / 110) || 1;
+        const txt = cleanText(b.text);
+        const lines = Math.ceil(txt.length / 110) || 1;
         const h = lines * lineH + 0.1;
         if (y + h > 6.7) flushSlide();
-        s.addText(b.text, { x, y, w, h, fontSize:11, color:TEXT, fontFace:'Calibri' });
+        s.addText(txt, { x, y, w, h, fontSize:11, color:TEXT, fontFace:'Calibri' });
         y += h;
       } else if (b.type === 'list') {
         const bullets = ['•','◦','▪'];
         const colors = [GREEN_DEEP, GREEN_LIGHT, ORANGE];
         b.items.forEach(it => {
+          const txt = cleanText(it.text);
           const lvl = Math.min(it.level, 2);
-          const lines = Math.ceil(it.text.length / (105 - lvl*8)) || 1;
+          const lines = Math.ceil(txt.length / (105 - lvl*8)) || 1;
           const h = lines * lineH + 0.05;
           if (y + h > 6.7) flushSlide();
           s.addText(bullets[lvl], { x:x+lvl*0.25, y, w:0.2, h, fontSize:11, bold:true, color:colors[lvl], fontFace:'Calibri' });
-          s.addText(it.text, { x:x+0.28+lvl*0.25, y, w:w-0.28-lvl*0.25, h, fontSize:11, color:TEXT, fontFace:'Calibri' });
+          s.addText(txt, { x:x+0.28+lvl*0.25, y, w:w-0.28-lvl*0.25, h, fontSize:11, color:TEXT, fontFace:'Calibri' });
           y += h;
         });
         y += 0.05;
       } else if (b.type === 'table') {
+        // Nettoyage des cellules
+        b.header = b.header.map(cleanText);
+        b.rows = b.rows.map(r => r.map(cleanText));
         const cols = b.header.length;
-        // 1ère colonne plus large (label) si tableau ≥ 3 cols
-        const firstColRatio = cols >= 3 ? 0.32 : 1 / cols;
+        // 1ère colonne adaptative : largeur plus grande SAUF si labels courts (R1, R2…)
+        const firstColAvgLen = b.rows.length
+          ? b.rows.reduce((acc, r) => acc + (r[0] || '').length, 0) / b.rows.length
+          : 0;
+        const firstColShort = firstColAvgLen <= 5;
+        const firstColRatio = (cols >= 3 && !firstColShort) ? 0.32 : 1 / cols;
         const otherColW = w * (1 - firstColRatio) / Math.max(1, cols - 1);
         const colW = (i) => i === 0 ? w * firstColRatio : otherColW;
         const colX = (i) => x + (i === 0 ? 0 : w * firstColRatio + (i - 1) * otherColW);
@@ -7660,8 +7723,8 @@ function exportProjetCompletPPTX() {
         rows:[
           ['CA HT',           fmt(r.n.ca),     fmt(r.n1.ca),    fmt(r.n2.ca)],
           ['Marge brute',     fmt(r.n.mb),     fmt(r.n1.mb),    fmt(r.n2.mb)],
-          ['MO directe',      fmt(-r.n.moDir), fmt(-r.n1.moDir),fmt(-r.n2.moDir)],
-          ['MO support',      fmt(-r.n.moSup), fmt(-r.n1.moSup),fmt(-r.n2.moSup)],
+          ['MO directe',      fmt(-r.n.moDirect), fmt(-r.n1.moDirect),fmt(-r.n2.moDirect)],
+          ['MO support',      fmt(-r.n.moSupport), fmt(-r.n1.moSupport),fmt(-r.n2.moSupport)],
           ['CFD',             fmt(-r.n.cfd),   fmt(-r.n1.cfd),  fmt(-r.n2.cfd)],
           ['CFI',             fmt(-r.n.cfi),   fmt(-r.n1.cfi),  fmt(-r.n2.cfi)],
           ['EBITDA',          fmt(r.n.ebitda), fmt(r.n1.ebitda),fmt(r.n2.ebitda)],
