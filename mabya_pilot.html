@@ -1835,11 +1835,16 @@ input[type="date"], input[type="number"] { width:100%; }
                 font-weight="900" font-size="240" fill="#1B2A4A"
                 textLength="720" lengthAdjust="spacing">MABY</text>
 
-          <!-- Le "A" final = triangle plein (gauche) + parallélogramme incliné / (droite) -->
-          <!-- Triangle plein (chevron gauche, orange foncé saturé) — moitié gauche du "A" -->
-          <path d="M 745 220 L 825 60 L 905 220 Z" fill="#C53A18"/>
-          <!-- Parallélogramme incliné (branche droite du "A", orange clair vif) -->
-          <path d="M 920 220 L 970 30 L 1070 30 L 1020 220 Z" fill="#ED7045"/>
+          <!-- ─── SYMBOLE ORANGE = "A" stylisé ─── -->
+          <!-- 1) Chevron évidé : grand triangle orange avec découpe triangulaire centrale
+                 (forme un chevron / flèche pointant vers le haut). Le fond blanc traverse
+                 la découpe grâce à fill-rule="evenodd". -->
+          <path d="M 740 220 L 830 35 L 920 220 Z
+                   M 800 220 L 830 130 L 860 220 Z"
+                fill="#ED7045" fill-rule="evenodd"/>
+
+          <!-- 2) Barre oblique séparée à droite (parallélogramme), séparée par un espace blanc -->
+          <path d="M 970 220 L 1010 35 L 1100 35 L 1060 220 Z" fill="#ED7045"/>
 
           <!-- "Holding" en gris, aligné à droite sous le bloc "A" -->
           <text x="725" y="305" font-family="'Avenir Next', 'Helvetica Neue', Arial, sans-serif"
