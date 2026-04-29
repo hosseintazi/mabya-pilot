@@ -224,6 +224,25 @@ button:focus-visible, .nav-item:focus-visible, .proj-item:focus-visible, .tb-btn
   position:relative;
 }
 .sb-logo .brand-logo svg { width:100%; height:auto; max-width:240px; display:block; margin:0 auto; }
+/* Wordmark MABYA simplifié (sans symbole orange) */
+.sb-logo .brand-mabya {
+  font-family: 'Helvetica Neue', 'Arial Black', Arial, sans-serif;
+  font-weight: 900;
+  font-size: 32px;
+  letter-spacing: -1px;
+  color: #1B2A4A;
+  line-height: 1;
+  text-align: center;
+}
+.sb-logo .brand-holding {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #8C8C8C;
+  text-align: center;
+  margin-top: 4px;
+}
 .sb-logo .brand-logo svg { width:180px; height:auto; display:block; }
 .sb-logo .product-line {
   display:flex; align-items:center; gap:8px;
@@ -1826,30 +1845,11 @@ input[type="date"], input[type="number"] { width:100%; }
   <aside class="sidebar" id="sidebar">
     <!-- Bouton de toggle (collapse/expand) -->
     <button class="sb-toggle" onclick="toggleSidebar()" title="Réduire / agrandir la sidebar (Ctrl+B)">‹</button>
-    <!-- Header avec logo Mabya Holding (SVG inline fidèle au logo officiel) -->
+    <!-- Header : wordmark MABYA en navy (logo simplifié) -->
     <div class="sb-logo">
       <div class="brand-logo" aria-label="Mabya Holding">
-        <svg viewBox="0 0 1180 320" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMid meet">
-          <!-- Wordmark "MABY" : textLength=720 pour rendu prévisible -->
-          <text x="0" y="220" font-family="'Avenir Next', 'Helvetica Neue', 'Arial Black', sans-serif"
-                font-weight="900" font-size="240" fill="#1B2A4A"
-                textLength="720" lengthAdjust="spacing">MABY</text>
-
-          <!-- ─── SYMBOLE ORANGE = "A" stylisé ─── -->
-          <!-- 1) Chevron évidé : grand triangle orange avec découpe triangulaire centrale
-                 (forme un chevron / flèche pointant vers le haut). Le fond blanc traverse
-                 la découpe grâce à fill-rule="evenodd". -->
-          <path d="M 740 220 L 830 35 L 920 220 Z
-                   M 800 220 L 830 130 L 860 220 Z"
-                fill="#ED7045" fill-rule="evenodd"/>
-
-          <!-- 2) Barre oblique séparée à droite (parallélogramme), séparée par un espace blanc -->
-          <path d="M 970 220 L 1010 35 L 1100 35 L 1060 220 Z" fill="#ED7045"/>
-
-          <!-- "Holding" en gris, aligné à droite sous le bloc "A" -->
-          <text x="725" y="305" font-family="'Avenir Next', 'Helvetica Neue', Arial, sans-serif"
-                font-weight="500" font-size="80" fill="#8C8C8C" letter-spacing="0">Holding</text>
-        </svg>
+        <div class="brand-mabya">MABYA</div>
+        <div class="brand-holding">Holding</div>
       </div>
 
       <!-- Ligne produit "PILOT" sous le logo holding -->
@@ -6436,17 +6436,15 @@ function exportProjetCompletPDF() {
     pageNum++;
     setFill(GREEN_DEEP);
     doc.rect(0, 0, W, 14, 'F');
-    // Logo MABYA
+    // Wordmark MABYA simplifié
     setText([255,255,255]);
     doc.setFont('helvetica','bold');
     doc.setFontSize(13);
-    doc.text('MABY', M, 9);
-    setText(ORANGE);
-    doc.text('▲', M + 17, 9);
+    doc.text('MABYA', M, 9);
     setText([184, 197, 217]);
     doc.setFont('helvetica','normal');
     doc.setFontSize(7);
-    doc.text('Holding', M + 22, 9);
+    doc.text('Holding', M + 24, 9);
     // Nom projet à droite
     setText([255,255,255]);
     doc.setFont('helvetica','bold');
@@ -6761,9 +6759,7 @@ function exportProjetCompletPDF() {
   setText([255, 255, 255]);
   doc.setFont('helvetica','bold');
   doc.setFontSize(64);
-  doc.text('MABY', W/2 - 30, 110, { align:'left' });
-  setText(ORANGE);
-  doc.text('▲', W/2 + 28, 110);
+  doc.text('MABYA', W/2, 110, { align:'center' });
   setText([200, 209, 221]);
   doc.setFont('helvetica','normal');
   doc.setFontSize(14);
@@ -7175,8 +7171,6 @@ function exportCadragePDF() {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
   doc.text('MABYA', 12, 13);
-  doc.setTextColor(226, 80, 47);       // orange
-  doc.text('A', 34, 13);
   doc.setTextColor(184, 197, 217);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
@@ -7586,8 +7580,7 @@ function exportProjetCompletPPTX() {
   let s = pptx.addSlide();
   s.background = { color: GREEN_DEEP };
   // Logo MABYA
-  s.addText('MABY', { x:0, y:2.3, w:13.33, h:1.5, fontSize:90, bold:true, color:'FFFFFF', align:'center', fontFace:'Calibri' });
-  s.addText('▲', { x:7.6, y:2.3, w:0.8, h:1.5, fontSize:80, bold:true, color:ORANGE, align:'center', fontFace:'Calibri' });
+  s.addText('MABYA', { x:0, y:2.3, w:13.33, h:1.5, fontSize:90, bold:true, color:'FFFFFF', align:'center', fontFace:'Calibri' });
   s.addText('Holding', { x:0, y:3.5, w:13.33, h:0.4, fontSize:18, color:'C8D1DD', align:'center', fontFace:'Calibri', charSpacing:6 });
   // Liseré orange
   s.addShape('rect', { x:5, y:4.4, w:3.33, h:0.05, fill:{color:ORANGE} });
@@ -7930,7 +7923,7 @@ function exportBriefPPTX() {
   let s = pptx.addSlide();
   s.background = { color:NAVY };
   s.addText('MABYA', { x:0.5, y:2.5, w:12, h:1, fontSize:80, bold:true, color:'FFFFFF', align:'center', fontFace:'Calibri' });
-  s.addText('A', { x:8.3, y:2.5, w:0.8, h:1, fontSize:80, bold:true, color:ORANGE, align:'center', fontFace:'Calibri' });
+  s.addText('Holding', { x:0.5, y:3.5, w:12, h:0.4, fontSize:18, color:'C8D1DD', align:'center', fontFace:'Calibri', charSpacing:6 });
   s.addText('BRIEF PROJET', { x:0.5, y:4.2, w:12, h:0.5, fontSize:18, color:'B8C5D9', align:'center', fontFace:'Calibri' });
   s.addText(p.nom, { x:0.5, y:4.8, w:12, h:0.8, fontSize:36, bold:true, color:'FFFFFF', align:'center', fontFace:'Calibri' });
   s.addText(`Date : ${new Date().toLocaleDateString('fr-FR')}  |  Leader : ${p.leader||'—'}  |  Sponsor : ${p.sponsor||'—'}`, { x:0.5, y:5.8, w:12, h:0.4, fontSize:14, color:'B8C5D9', align:'center', fontFace:'Calibri' });
