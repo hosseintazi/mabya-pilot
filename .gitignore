@@ -1,0 +1,21 @@
+# Office temp lock files
+~$*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Claude local config (contient potentiellement des paths absolus)
+.claude/launch.json
+
+# Backup / archives locales
+*.bak
+*.tmp
+*.swp
+
+# Node modules au cas où
+node_modules/
+
+# Ancienne copie de travail (le fichier de prod est à la racine)
+Projet Mabya Pilot/
