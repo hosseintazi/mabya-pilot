@@ -223,7 +223,7 @@ button:focus-visible, .nav-item:focus-visible, .proj-item:focus-visible, .tb-btn
   border-bottom:3px solid var(--green-deep);
   position:relative;
 }
-.sb-logo .brand-logo svg { width:100%; height:auto; max-width:220px; display:block; margin:0 auto; }
+.sb-logo .brand-logo svg { width:100%; height:auto; max-width:240px; display:block; margin:0 auto; }
 .sb-logo .brand-logo svg { width:180px; height:auto; display:block; }
 .sb-logo .product-line {
   display:flex; align-items:center; gap:8px;
@@ -1829,20 +1829,22 @@ input[type="date"], input[type="number"] { width:100%; }
     <!-- Header avec logo Mabya Holding (SVG inline fidèle au logo officiel) -->
     <div class="sb-logo">
       <div class="brand-logo" aria-label="Mabya Holding">
-        <svg viewBox="0 0 850 290" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMid meet">
-          <!-- Wordmark "MABY" en navy profond (lettres très épaisses geometric) -->
-          <text x="0" y="205" font-family="'Avenir Next', 'Helvetica Neue', 'Arial Black', sans-serif"
-                font-weight="900" font-size="220" fill="#1B2A4A" letter-spacing="-8">MABY</text>
+        <svg viewBox="0 0 1100 320" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMid meet">
+          <!-- Wordmark "MABY" : on force textLength=720 pour rendu prévisible
+               quelle que soit la police de fallback du navigateur -->
+          <text x="0" y="220" font-family="'Avenir Next', 'Helvetica Neue', 'Arial Black', sans-serif"
+                font-weight="900" font-size="240" fill="#1B2A4A"
+                textLength="720" lengthAdjust="spacing">MABY</text>
 
-          <!-- Le "A" final = deux chevrons orange distincts qui se superposent -->
-          <!-- Chevron ARRIÈRE (sommet à gauche, plus bas, orange foncé) -->
-          <path d="M 540 205 L 615 55 L 690 205 Z" fill="#D24820"/>
-          <!-- Chevron AVANT (sommet à droite, plus haut, orange clair vif) -->
-          <path d="M 600 205 L 685 30 L 770 205 Z" fill="#F47445"/>
+          <!-- Les 2 chevrons formant le "A" final, juste après le Y (à partir de x=740) -->
+          <!-- Chevron ARRIÈRE (gauche, sommet plus bas, orange foncé saturé) -->
+          <path d="M 740 220 L 815 60 L 890 220 Z" fill="#C53A18"/>
+          <!-- Chevron AVANT (droite, sommet plus haut et plus à droite, orange clair vif) -->
+          <path d="M 830 220 L 920 22 L 1010 220 Z" fill="#ED7045"/>
 
-          <!-- "Holding" en gris, aligné sous "BYA / chevrons" en bas à droite -->
-          <text x="500" y="270" font-family="'Avenir Next', 'Helvetica Neue', Arial, sans-serif"
-                font-weight="500" font-size="58" fill="#8C8C8C" letter-spacing="0">Holding</text>
+          <!-- "Holding" en gris, aligné à droite sous les chevrons -->
+          <text x="725" y="305" font-family="'Avenir Next', 'Helvetica Neue', Arial, sans-serif"
+                font-weight="500" font-size="80" fill="#8C8C8C" letter-spacing="0">Holding</text>
         </svg>
       </div>
 
