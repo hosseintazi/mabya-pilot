@@ -7189,21 +7189,27 @@ function exportProjetCompletPDF() {
   //   (évite que toLocaleString('fr-FR') affiche des "/" parasites dans le PDF)
   // - Remplace certains emojis non rendus par des équivalents ASCII / simples
   function cleanText(s) {
-    return String(s == null ? '' : s)
-      .replace(/\*\*(.+?)\*\*/g, '$1')        // **bold** → bold
-      .replace(/__(.+?)__/g, '$1')            // __bold__ → bold
-      .replace(/(?<![a-zA-Z0-9])_([^_\n]+)_(?![a-zA-Z0-9])/g, '$1')   // _italic_ inline → italic
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/[  ]/g, ' ')        // espaces insécables → espace standard
-      .replace(/⚠️/g, '⚠')                    // emoji warning : retirer le sélecteur
-      .replace(/💡/g, '►')                    // light bulb non rendu → flèche
-      .replace(/✓/g, '✓')                     // garder
-      .replace(/✗/g, '✗')                     // garder
-      .replace(/[​‌‍﻿]/g, '');   // zero-width chars
+    let t = String(s == null ? '' : s)
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      .replace(/__(.+?)__/g, '$1')
+      .replace(/(?<![a-zA-Z0-9])_([^_\n]+)_(?![a-zA-Z0-9])/g, '$1')
+      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+      .replace(/[  -   　]/g, ' ')
+      .replace(/[‘’‚‛]/g, "'")
+      .replace(/[“”„‟]/g, '"')
+      .replace(/[–—―]/g, '-')
+      .replace(/…/g, '...')
+      .replace(/→/g, '->').replace(/←/g, '<-').replace(/↔/g, '<->')
+      .replace(/≤/g, '<=').replace(/≥/g, '>=').replace(/≠/g, '!=')
+      .replace(/•/g, '-').replace(/[◦▪▫]/g, '-')
+      .replace(/►/g, '>').replace(/◄/g, '<')
+      .replace(/[✓✔]/g, 'OK').replace(/[✗✘]/g, 'X')
+      .replace(/[⚠⚡]/g, '!').replace(/️/g, '')
+      .replace(/[\u{1F300}-\u{1FAFF}]/gu, '').replace(/[\u{2600}-\u{27BF}]/gu, '')
+      .replace(/[​-‍﻿]/g, '')
+      .replace(/[^\x00-\xFF]/g, '?');
+    return t;
   }
 
   // Titre H1 (vert deep avec liseré orange à gauche)
