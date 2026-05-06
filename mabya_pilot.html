@@ -3290,6 +3290,628 @@ if (!STATE.migrations.distribRisquesV1) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// MIGRATIONS PROJET VIENNOISERIE — Brief complet 12 sections (QCD)
+// ═══════════════════════════════════════════════════════════════════
+const VIEN_CONTRAT_QCD_V1 = {
+  qualiteCdc: '• Atteindre un rendu proche boulangerie premium (références Amoud / Paul).\n• Benchmark Chaupain : faire mieux sur qualité finale, temps préparation et simplicité.\n• Goût beurre marqué, chocolat qualitatif, sucre équilibré, sans goût artificiel.\n• Feuilletage visible, croustillant extérieur, moelleux intérieur, dorure homogène.\n• Régularité absolue lot à lot (même rendu après cuisson chez tout client).\n• Mode opératoire simple, court, reproductible par opérateur non expert.\n• Chaîne du froid négatif maîtrisée jusqu\'à l\'utilisateur final.\n• Validation triple Go : qualité interne + retours pilotes + tests sensoriels.',
+  coutCdc:    '• Prix au minimum iso-concurrence, marge optimale au-dessus du seuil minimum Go.\n• Sourcing matières premières au meilleur prix marché (beurre, chocolat, farine).\n• Définir 3 niveaux : marge minimale Go / marge cible / marge optimale.\n• Optimiser sans dégrader rendu (refuser économies à perte qualité visible).\n• Construire P&L par référence + canal (CHR / hôtels / coffee shops / retail).\n• Arbitrage assumé : qualité supérieure prime si différenciation justifiée.',
+  delaiCdc:   '• Fenêtre cible : Q4 2026 – Q1 2027.\n• Le délai reste 3ᵉ priorité — pas de lancement forcé si qualité ou marge non validées.\n• Lancement séquencé : pilote CHR Casablanca → extension CHR/coffee shops → retail Marjane phase 2 → différenciation P3.\n• Définir un partenaire commercial avec et pour qui on développe (Marjane à confirmer).\n• Triple Go obligatoire avant lancement : Qualité + Marge + Exécution client.'
+};
+
+const VIEN_OVERVIEW_V1 = [
+  '## 1. Contexte général',
+  'Mabya souhaite développer une offre locale de viennoiseries surgelées premium, destinée aux clients pros et retail recherchant un produit régulier, qualitatif, simple à remettre en œuvre et compétitif face aux alternatives existantes.',
+  'Le projet s\'inscrit dans la diversification Mabya / Foodipex : développer des relais de croissance au-delà du client principal, valoriser le savoir-faire industriel local, capitaliser sur la chaîne du froid, construire des offres premium adaptées aux marchés CHR, coffee shops, hôtels et retail à VA.',
+  '',
+  '## 2. Opportunité business',
+  '| Opportunité | Lecture pour le projet |',
+  '|---|---|',
+  '| Montée en gamme | Clients recherchent qualité, régularité, standard boulangerie premium |',
+  '| Coffee shops, cafés, hôtels, foodservice | Besoin croissant produits prêts à cuire, rendu constant |',
+  '| Limites de l\'offre actuelle (Chaupain) | Améliorable sur qualité finale, temps de prép, simplicité d\'usage |',
+  '| Potentiel retail / GMS | Test via partenaire structuré (Marjane à explorer) |',
+  '| Savoir-faire industriel local | Mabya peut créer une alternative locale premium maîtrisée |',
+  '',
+  '## 3. Lien avec la stratégie Mabya / Foodipex',
+  '• **Diversification du portefeuille** : la viennoiserie complète les projets pain, buns, distribution premium.',
+  '• **Valorisation outil industriel local** : meilleure maîtrise qualité, coûts, délais, adaptation marché.',
+  '• **Capitalisation chaîne du froid Foodipex** : la maîtrise du froid négatif devient avantage commercial.',
+  '',
+  '## 4. Besoin marché / client',
+  '| Besoin client | Implication projet |',
+  '|---|---|',
+  '| Qualité proche boulangerie premium | Se rapprocher des standards Amoud / Paul |',
+  '| Régularité produit | Standardiser recettes, grammages, formats, modes opératoires |',
+  '| Gain de temps | Réduire et simplifier décongélation et cuisson |',
+  '| Simplicité d\'exécution | Mode opératoire utilisable par équipes non expertes |',
+  '| Disponibilité permanente | Sécuriser production, stock, distribution |',
+  '| Prix marché acceptable | Iso-concurrence minimum + marge projet suffisante |',
+  '_Le cadrage Mabya précise un rendu final proche d\'une viennoiserie de boulangerie premium, benchmark Amoud / Paul / Chaupain, avec amélioration du temps de décongélation-cuisson._',
+  '',
+  '## 5. Familles produits concernées',
+  '| Niveau de gamme | Produits | Rôle |',
+  '|---|---|---|',
+  '| Minimum lancement | Croissant beurre, pain au chocolat, pain aux raisins / escargot | Cœur de marché, test acceptation |',
+  '| Complémentaire | Mini viennoiseries, chaussons, brioches individuelles | Hôtels, buffets, coffee shops, retail |',
+  '| Différenciante | Premium revisités, recettes locales, formats signature | Différence vs concurrence |',
+  '| Forte marge | Mini formats, assortiments, packs retail, produits coffee shop | Rentabilité portefeuille |',
+  '',
+  '## 6. Intérêt stratégique',
+  '| Axe | Intérêt |',
+  '|---|---|',
+  '| Marge | Gamme à VA, pilotage prix de revient, marge minimale |',
+  '| Image | Positionner Mabya sur territoire premium, qualitatif, moderne |',
+  '| Diversification | Réduire dépendance flux existants, ouvrir nouveaux canaux |',
+  '| Synergies | Compléter pain, distribution premium, CHR et retail |',
+  '| Industrialisation locale | Construire savoir-faire surgelé premium local |',
+  '',
+  '## 7. Synthèse direction générale',
+  '_Le projet Viennoiserie doit être traité comme un projet de montée en gamme locale : non pas seulement produire une viennoiserie surgelée, mais proposer une alternative crédible aux références premium de boulangerie, avec exécution plus simple que les offres existantes et rentabilité suffisante pour justifier le lancement._',
+  '• La qualité doit rester le 1ᵉʳ critère d\'arbitrage.',
+  '• Le coût et les délais sont pilotés mais ne doivent pas dégrader le rendu produit final.'
+].join('\n');
+
+const VIEN_MARCHE_V1 = [
+  '## 1. Lecture marché',
+  'Le projet adresse un marché où la demande existe déjà, mais où l\'offre surgelée doit convaincre par la qualité finale, la simplicité de remise en œuvre et la régularité produit.',
+  '_Étude pros : viennoiserie utilisée par 35,3 % des répondants. Mais 91,9 % achètent en frais, 16,8 % en surgelé. Potentiel existe, freins d\'usage importants à lever._',
+  '',
+  '## 2. Segments clients prioritaires',
+  '| Segment | Besoin principal | Intérêt Mabya | Priorité |',
+  '|---|---|---|---|',
+  '| Coffee shops premium | Viennoiserie régulière, qualitative, simple à cuire | Très cohérent avec offre courte premium | Très haute |',
+  '| Hôtels / buffets petit-déjeuner | Volume, régularité, mini formats | Standardisation et service fiable | Haute |',
+  '| Restaurants / brunch / salons de thé | Premium prêt à servir, rendu boulangerie | Valorisation au-delà du petit-déj | Haute |',
+  '| Boulangeries / pâtisseries partenaires | Complément gamme, dépannage, régularité | Cible intéressante mais sensible image industrielle | Moyenne |',
+  '| Retail premium / GMS | Surgelé domicile, pratique, rassurant | Potentiel via Marjane / Carrefour | Haute (phase 2) |',
+  '| QSR / chaînes locales | Prix, simplicité, constance, volume | Si compétitif et facile à exécuter | Moyenne |',
+  '| Export | Local premium compétitif | Après stabilisation locale | Phase ultérieure |',
+  '',
+  '## 3. Zones géographiques prioritaires',
+  '| Zone | Raison | Cible |',
+  '|---|---|---|',
+  '| Casablanca | Premier bassin, CHR, coffee shops, GMS, logistique | Pilote prioritaire |',
+  '| Marrakech | Densité touristique, hôtels, restaurants, cafés premium | Pilote CHR / hôtellerie |',
+  '| Rabat | Clientèle urbaine premium, institutionnelle, retail | Déploiement premium |',
+  '| Tanger | CHR, logistique Nord, ouverture export | Phase 2 |',
+  '| Agadir | Hôtellerie, restauration touristique, saisonnier | Phase 2 |',
+  '',
+  '## 4. Attentes clients à adresser',
+  '| Attente | Implication projet |',
+  '|---|---|',
+  '| Qualité proche boulangerie premium | Benchmark Amoud / Paul, exigence goût/texture/feuilletage/visuel |',
+  '| Régularité | Même rendu à chaque cuisson, même grammage, même dorure |',
+  '| Simplicité d\'exécution | Mode opératoire clair, décongélation, pousse, cuisson, maintien |',
+  '| Rapidité | Améliorer temps décongélation-cuisson vs Chaupain |',
+  '| Disponibilité | Zéro rupture sur les références cœur de gamme |',
+  '| Prix cohérent | Iso-concurrence + marge suffisante |',
+  '| Traçabilité / sécurité | Chaîne du froid maîtrisée jusqu\'au client |',
+  '| Différenciation | Plus premium, gourmand, fiable que l\'existant |',
+  '_Étude conso : visuel doré et brillant, forme soignée, feuilletage apparent, texture légère, goût beurre/chocolat qualitatifs, absence de goût artificiel._',
+  '',
+  '## 5. Freins marché identifiés',
+  '| Frein | Niveau | Réponse projet |',
+  '|---|---|---|',
+  '| Habitude forte du frais | Élevé | Prouver rendu "comme frais" après cuisson |',
+  '| Perception industrielle du surgelé | Élevé | Positionnement premium, ingrédients qualitatifs, dégustations |',
+  '| Contraintes stockage froid | Moyen-élevé | Formats adaptés CHR / retail, accompagnement client |',
+  '| Crainte goût artificiel | Élevé | Recette clean, beurre qualitatif, chocolat identifiable |',
+  '| Mauvaise tenue à la cuisson | Élevé | Tests R&D intensifs, protocole simplifié |',
+  '| Prix vs boulangerie / concurrence | Moyen | Iso-concurrence min, valeur perçue supérieure |',
+  '| Ruptures et service fournisseur | Élevé | Stock tampon, prévisions, distribution maîtrisée |',
+  '_Pros : qualité actuelle moyenne / insuffisante pour 73,4 %. Opportunité directe pour Mabya._',
+  '',
+  '## 6. Concurrence et alternatives',
+  '| Alternative | Lecture | Positionnement à viser |',
+  '|---|---|---|',
+  '| Boulangeries premium (Amoud / Paul) | Référence qualité perçue | S\'en rapprocher en rendu produit |',
+  '| Chaupain | Benchmark direct viennoiserie surgelée | Faire mieux sur qualité finale, temps préparation, simplicité |',
+  '| Boulangeries locales | Fraîcheur et proximité | Différenciation : régularité, disponibilité, praticité |',
+  '| Import surgelé | Qualité mais coût / disponibilité variables | Plus compétitif via production locale |',
+  '| GMS standards | Accessibilité prix | Éviter la banalisation, rester premium accessible |',
+  '| Production interne CHR / hôtels | Maîtrise directe mais coûteuse | Alternative plus simple et rentable |',
+  '',
+  '## 7. Marché adressable prioritaire',
+  '| Phase | Cible | Objectif |',
+  '|---|---|---|',
+  '| Pilote 1 | 5 à 10 coffee shops / hôtels / restaurants premium Casablanca | Valider rendu produit, usage terrain, prix, réassort |',
+  '| Pilote 2 | 1 partenaire retail / GMS (Marjane) | Tester appétence consommateur et packaging |',
+  '| Déploiement 1 | Casablanca + Marrakech | Construire 1ers volumes et références clients |',
+  '| Déploiement 2 | Rabat, Tanger, Agadir | Étendre après stabilisation qualité / prod / logistique |',
+  '',
+  '## 8. Synthèse direction générale',
+  '_La demande ne sera pas captée par un simple produit "pratique" : elle sera captée par un produit capable de délivrer le plaisir d\'une vraie viennoiserie, avec la simplicité du surgelé. Priorité : offre courte, premium, parfaitement maîtrisée, testée auprès de clients exigeants, puis élargie au retail si qualité, marge et exécution validées._'
+].join('\n');
+
+const VIEN_OBJ_V1 = [
+  '## 1. Objectif général',
+  'Développer et lancer une gamme locale de viennoiseries surgelées premium, capable de livrer un rendu final proche d\'une viennoiserie de boulangerie de référence, tout en assurant une exécution simple pour les clients pros et une rentabilité suffisante pour Mabya.',
+  '_Hiérarchie QCD : Qualité d\'abord → Coût / marge → Délais. Conforme au cadrage : viser un rendu Amoud / Paul, benchmarker Chaupain, améliorer temps de décongélation-cuisson, garantir chaîne du froid jusqu\'à l\'utilisateur final._',
+  '',
+  '## 2. Objectifs business',
+  '| Objectif | KPI | Cible |',
+  '|---|---|---|',
+  '| Lancer une gamme commercialisable | Nb références validées | 3 à 5 références cœur |',
+  '| Générer un nouveau relais de CA | CA additionnel viennoiserie | À définir avec Finance / CDG |',
+  '| Atteindre une marge minimale projet | Marge brute / référence / portefeuille | Intervalle minimum à définir |',
+  '| Sécuriser les premiers clients actifs | Nb clients pilotes récurrents | 5 à 10 clients pros |',
+  '| Valider un partenaire retail / GMS | Accord pilote ou test commercial | 1 partenaire (Marjane à confirmer) |',
+  '| Construire des volumes réguliers | Volumes mensuels par référence | À définir post-pilote |',
+  '| Réduire la dépendance flux existants | Part du CA hors client principal | Contribution à la diversification |',
+  '',
+  '## 3. Objectifs stratégiques',
+  '| Objectif stratégique | Finalité |',
+  '|---|---|',
+  '| Positionner Mabya sur la viennoiserie surgelée premium locale | Alternative locale crédible vs offres importées / concurrentes |',
+  '| Compléter le territoire pain / buns / bakery | Plateforme BVP cohérente |',
+  '| Valoriser le savoir-faire industriel local | Capacité production maîtrisée localement |',
+  '| Capitaliser sur la chaîne du froid Foodipex | Actif logistique froid → avantage commercial |',
+  '| Préparer extension CHR / retail / export | Produit assez robuste pour plusieurs canaux |',
+  '| Renforcer l\'image premium du groupe | Produits à forte VA et qualité constante |',
+  '',
+  '## 4. Objectifs opérationnels',
+  '| Domaine | Objectif | Responsable |',
+  '|---|---|---|',
+  '| Produit / R&D | Recette proche boulangerie premium (goût, feuilletage, dorure, texture, tenue cuisson) | R&D externe + HN |',
+  '| Benchmark | Comparer Amoud / Paul / Chaupain | R&D + Marketing + Qualité |',
+  '| Process | Stabiliser mode opératoire (décongél., pousse, cuisson, maintien) | Industriel + Qualité |',
+  '| Qualité | Sécurité alimentaire, chaîne du froid, traçabilité, fiches techniques | Qualité MBI |',
+  '| Coûts | Prix de revient complet par référence | Finance / CDG + Supply |',
+  '| Marge | Définir intervalle marge minimum Go | Finance / CDG |',
+  '| Supply | Sécuriser MP clés au meilleur prix | Acheteuse MBI + Appro Foodipex |',
+  '| Commercial | Identifier clients pilotes CHR / coffee shops / hôtels / retail | Sales à recruter + Direction |',
+  '| Marketing | Positionnement, argumentaire, packaging pilote | MH |',
+  '| Distribution | Tester stockage, livraison, remise produit sous froid | Supply + Foodipex |',
+  '',
+  '## 5. Objectifs du mix produit',
+  '| Axe | Objectif |',
+  '|---|---|',
+  '| Produit | Rendu premium, feuilletage visible, goût beurre/chocolat qualitatif, texture légère, dorure homogène |',
+  '| Prix | Iso-concurrence min, marge projet acceptable |',
+  '| Pack | Formats CHR, coffee shops, hôtels, retail éventuel |',
+  '| Mode d\'emploi | Simple, clair, reproductible par client non expert |',
+  '| Marque / visuel | Positionnement premium local, rassurant et professionnel |',
+  '| Distribution | Démarrage séquencé sur clients pilotes avant élargissement |',
+  '| Argumentaire | "Qualité boulangerie premium + simplicité du surgelé + disponibilité locale" |',
+  '',
+  '## 6. Indicateurs de réussite',
+  '| Horizon | Indicateur clé | Décision |',
+  '|---|---|---|',
+  '| R&D | Produit validé en dégustation interne | Go / ajustement recette |',
+  '| Industriel | Process stable et reproductible | Go test production |',
+  '| Qualité | Chaîne du froid + documentation validées | Go test client |',
+  '| Pilote client | Satisfaction client + réachat | Go déploiement |',
+  '| Économique | Marge / référence conforme au seuil minimum | Go commercial |',
+  '| Retail | Accord test avec partenaire | Go packaging / référencement |',
+  '',
+  '## 7. Synthèse direction générale',
+  '_Le projet doit viser 3 résultats concrets :_',
+  '• **Produit réellement premium** : soutenir la comparaison avec Amoud / Paul.',
+  '• **Modèle économique défendable** : prix marché, marge minimale claire, coûts industriels maîtrisés.',
+  '• **Exécution simple** : permettre aux clients (CHR, hôtels, coffee shops, retail) de réussir le produit final sans complexité.',
+  '_La décision de lancement ne sera pas basée uniquement sur la faisabilité industrielle. Elle sera conditionnée par un triple Go : Go qualité + Go marge + Go exécution client._'
+].join('\n');
+
+const VIEN_MIX_V1 = [
+  '## 1. Logique de construction',
+  '_La gamme doit être construite comme une offre courte, premium et maîtrisée, avec un lancement progressif._',
+  'L\'objectif n\'est pas de lancer immédiatement une gamme large, mais de réussir d\'abord les références cœur de marché avec un rendu final irréprochable : dorure, feuilletage, goût beurre, texture légère, chocolat qualitatif, simplicité de cuisson.',
+  '',
+  '## 2. Architecture de gamme proposée',
+  '| Niveau | Rôle | Références | Priorité |',
+  '|---|---|---|---|',
+  '| Minimum lancement | Tester avec les incontournables | Croissant beurre, pain chocolat, pain raisins / escargot | P1 |',
+  '| Complémentaire | Hôtels, coffee shops, buffets | Mini croissant, mini pain chocolat, mini mix | P2 |',
+  '| Différenciante | Écart vs Chaupain et offre standard | Croissant amandes, viennoiserie pistache, brioche feuilletée, recette signature | P3 |',
+  '| Forte marge | Améliorer rentabilité | Assortiments premium, mini CHR, packs retail, éditions Ramadan | P2 / P3 |',
+  '_Cadrage : benchmark Amoud / Paul / Chaupain, améliorer temps décongél.-cuisson vs Chaupain, simplifier mode opératoire jusqu\'au client._',
+  '',
+  '## 3. Tableau de gamme recommandé',
+  '| Famille | Cible | Intérêt | Complexité | Priorité |',
+  '|---|---|---|---|---|',
+  '| Croissant pur beurre / premium | Coffee shops, hôtels, restaurants, retail premium | Référence image, test qualité réelle | Élevée (feuilletage, beurre, dorure) | P1 |',
+  '| Pain au chocolat | Coffee shops, hôtels, retail | Volume, produit attendu | Élevée (chocolat, tenue cuisson) | P1 |',
+  '| Pain aux raisins / escargot | Hôtels, buffets, salons de thé | Complète gamme classique | Moyenne-élevée | P1 / P2 |',
+  '| Mini viennoiseries | Hôtels, buffets, catering, cafés | Forte adaptation CHR, contrôle portion | Moyenne | P2 |',
+  '| Assortiment mini premium | Hôtels, événementiel, retail | Simple à vendre, bon outil d\'essai | Moyenne | P2 |',
+  '| Croissant aux amandes | Coffee shops premium, salons de thé | Gourmand, forte VP | Élevée (fourrage, conservation) | P3 |',
+  '| Brioche feuilletée | Retail premium, coffee shops | Différenciation, gourmand | Élevée | P3 |',
+  '| Viennoiserie pistache / chocolat premium | Coffee shops, retail premium | Image premium, marge supérieure | Élevée (coût MP, régularité) | P3 |',
+  '| Recette locale revisitée | Retail, Ramadan, coffee shops | Différenciation locale, saisonnalité | Élevée | P3 |',
+  '| Pâte feuilletée surgelée | Boulangeries, pâtisseries, CHR | Innovation, extension B2B | Moyenne-élevée | À étudier |',
+  '',
+  '## 4. Gamme minimum de lancement',
+  '_Pilote : 3 références cœur uniquement._',
+  '| Référence | Pourquoi | Critère validation |',
+  '|---|---|---|',
+  '| Croissant premium | Juge de paix : si réussi, crédibilité gamme forte | Dorure, feuilletage, goût beurre, croustillant ext, moelleux int |',
+  '| Pain au chocolat | Volume, lisible CHR / coffee shops / retail | Chocolat qualitatif, équilibre sucre, tenue cuisson |',
+  '| Pain aux raisins / escargot | 3ᵉ référence classique pour hôtels et buffets | Garnissage, texture, régularité visuelle |',
+  '_Tester rapidement les 3 dimensions critiques : qualité perçue, exécution client, rentabilité par référence._',
+  '',
+  '## 5. Formats à prévoir',
+  '| Format | Usage | Recommandation |',
+  '|---|---|---|',
+  '| CHR standard | Coffee shops, cafés, restaurants | Cartons vrac ou sachets pros, par référence |',
+  '| Hôtel / buffet | Petits-déjeuners, banquets, catering | Mini viennoiseries ou mix mini formats |',
+  '| Retail premium | GMS / Marjane / Carrefour | Sachet conso avec mode d\'emploi clair |',
+  '| Test / dégustation | Clients pilotes, commerciaux, salons | Pack échantillon court 3 références |',
+  '| Saisonnier | Ramadan, fêtes, opérations promo | Assortiment premium ou recette spécifique |',
+  '',
+  '## 6. Standards produit à respecter',
+  '| Axe | Standard attendu |',
+  '|---|---|',
+  '| Aspect visuel | Doré, brillant, forme régulière, non brûlé, feuilletage visible |',
+  '| Texture | Feuilletage aéré, croustillant ext, moelleux int, non dense |',
+  '| Goût | Beurre qualitatif, chocolat identifiable, sucre équilibré |',
+  '| Odeur | Authentique de beurre / viennoiserie chaude, sans odeur margarine |',
+  '| Ingrédients | Beurre animal si revendiqué, chocolat de qualité, farine adaptée |',
+  '| Mode opératoire | Simple, court, reproductible par opérateur non expert |',
+  '| Chaîne du froid | Maintien froid négatif jusqu\'au client final |',
+  '| Après cuisson | Bonne tenue visuelle et gustative pendant le service |',
+  '',
+  '## 7. Logique CHR / coffee shop',
+  '| Besoin client | Réponse gamme |',
+  '|---|---|',
+  '| Carte courte | 3 références premium au démarrage |',
+  '| Exécution rapide | Process standardisé + fiche cuisson simple |',
+  '| Qualité constante | Produit surgelé calibré, même rendu à chaque cuisson |',
+  '| Moins de gaspillage | Cuisson à la demande |',
+  '| Personnel peu qualifié | Mode opératoire simplifié |',
+  '| Marge client | Premium permettant un prix de revente valorisé |',
+  '',
+  '## 8. Logique retail / GMS',
+  '| Élément | Recommandation |',
+  '|---|---|',
+  '| Gamme retail de départ | Croissant + pain au chocolat, puis assortiment |',
+  '| Promesse | "Le plaisir d\'une vraie viennoiserie, prête à cuire à la maison" |',
+  '| Mode d\'emploi | Très visible, simple, rassurant |',
+  '| Packaging | Premium accessible, fenêtre produit ou visuel appétissant |',
+  '| Prix | Lancement incitatif pour encourager l\'essai |',
+  '| Activation | Dégustation, cuisson sur place, échantillonnage |',
+  '| Distribution | Marjane à explorer en priorité, puis Carrefour / autres GMS |',
+  '_Le retail doit rester phase 2, après validation produit en conditions pros — sauf si Marjane est retenu comme partenaire de co-développement dès le pilote._',
+  '',
+  '## 9. Recommandation de priorisation',
+  '| Priorité | Décision |',
+  '|---|---|',
+  '| P1 — Immédiat | Croissant premium, pain au chocolat, pain aux raisins / escargot |',
+  '| P2 — Extension rapide | Mini viennoiseries, assortiment mini, pack CHR / hôtel |',
+  '| P3 — Après validation | Croissant amande, pistache, brioche feuilletée, recette locale signature |',
+  '| À étudier séparément | Pâte feuilletée surgelée B2B |',
+  '',
+  '## 10. Synthèse direction générale',
+  '_La gamme de lancement doit rester volontairement courte. Le risque serait de disperser la R&D sur trop de références avant d\'avoir validé le cœur du concept._',
+  '_Réussir 3 produits : croissant, pain au chocolat, pain aux raisins / escargot._',
+  '_Démontrer que Mabya peut proposer une viennoiserie surgelée locale avec rendu premium, exécution simple et marge acceptable._',
+  '_Le succès ne se jouera pas uniquement sur la recette, mais sur l\'ensemble du système : produit + mode opératoire + packaging + chaîne du froid + disponibilité + argumentaire commercial._'
+].join('\n');
+
+if (!STATE.migrations.vienPackV1) {
+  const vien = STATE.projets.find(pp => pp.id === 'viennoiserie');
+  if (vien && vien.sections) {
+    vien.contrat = 'QCD';
+    if (!vien.coleader) vien.coleader = 'HT';
+    if (!vien.leader) vien.leader = 'HN (Hossein)';
+    vien.sections.qualiteCdc = VIEN_CONTRAT_QCD_V1.qualiteCdc;
+    vien.sections.coutCdc    = VIEN_CONTRAT_QCD_V1.coutCdc;
+    vien.sections.delaiCdc   = VIEN_CONTRAT_QCD_V1.delaiCdc;
+    vien.sections.overview = VIEN_OVERVIEW_V1;
+    vien.sections.marche   = VIEN_MARCHE_V1;
+    vien.sections.obj_summary = VIEN_OBJ_V1;
+    vien.sections.mix_summary = VIEN_MIX_V1;
+    if (vien.nom === 'Projet Viennoiserie') vien.nom = 'Projet Viennoiserie surgelée locale';
+  }
+  STATE.migrations.vienPackV1 = true;
+  try { Storage.save(STATE); } catch(e) {}
+}
+
+// ── VIENNOISERIE : Faisabilité + Risques + Ressources + Décisions + Rétro ──
+const VIEN_FEAS_V1 = {
+  safety:     'risque|Validation sécurité alimentaire à programmer (DLC, microbiologie, allergènes). Chaîne du froid négatif à tester complètement (production -> stockage -> livraison -> client). Étiquetage et traçabilité obligatoires avant commercialisation.',
+  nutrition:  'go|Pas de claim nutritionnel prioritaire à ce stade. Positionnement centré sur qualité boulangerie, goût, texture, simplicité. Vérifier valeurs nutritionnelles obligatoires sur fiches techniques.',
+  science:    'go|Claims simples : surgelé premium, qualité boulangerie, prêt à cuire, fait localement. Éviter promesses complexes ou clean label sans justification.',
+  ip:         'risque|Sécuriser marque commerciale du projet (nom à valider — projet "Saturne" mentionné pour discrétion). Vérifier disponibilité marque et droits visuels avant communication externe.',
+  dev:        'risque|R&D point critique du projet : capacité à atteindre rendu Amoud / Paul / supérieur Chaupain dépend du recrutement Baker expert viennoiserie. Recettes V1 à développer (croissant, pain chocolat, escargot). Tests décongélation/cuisson chez clients pilotes.',
+  industrial: 'risque|Faisabilité production locale à confirmer via essais industriels pilotes. Process : précuisson, refroidissement, surgélation, conditionnement. Capacité ligne, rendement, pertes, régularité à mesurer.'
+};
+
+const VIEN_RISQUES_SUMMARY_V1 = [
+  '## Synthèse risques majeurs (12 risques identifiés)',
+  '_Détail complet et plans d\'action dans l\'onglet Risques. Cette synthèse récapitule les risques structurants au cadrage._',
+  '',
+  '| # | Direction | Description | Crit. | Owner | Échéance |',
+  '|---|---|---|---|---|---|',
+  '| R1 | R&D / Qualité | Qualité produit insuffisante vs benchmark Amoud / Paul | **3** | R&D externe + Qualité + HN | Avant Go pilote |',
+  '| R2 | R&D / Marketing | Produit non différenciant vs Chaupain | 2 | Marketing + R&D + Qualité | Avant validation recette |',
+  '| R3 | Project | Absence ou retard du Baker expert viennoiserie | **3** | Sponsor + Leader | Immédiat |',
+  '| R4 | Supply / Finance | Coût matières premières trop élevé | 2 | Supply + Finance | Avant P&L |',
+  '| R5 | Finance | Marge insuffisante au prix marché | **3** | Finance / CDG (FK) | Avant décision lancement |',
+  '| R6 | Industriel | Process industriel instable | 2 | HN + Industriel + Qualité | Avant test client |',
+  '| R7 | R&D / Qualité | Temps de décongélation / cuisson trop long ou complexe | 2 | R&D + Qualité + Sales | Avant pilote CHR |',
+  '| R8 | Supply / Qualité | Rupture de chaîne du froid jusqu\'au client final | **3** | Supply + Foodipex + Qualité | Avant pilote terrain |',
+  '| R9 | Sales / Marketing | Mauvaise adoption par clients habitués au frais | 2 | Sales + Marketing | Pendant pilote |',
+  '| R10 | Supply / Finance | Stock initial mal dimensionné | 2 | Supply + Finance + ADV | Phase pilote |',
+  '| R11 | Marketing / Finance | Packaging retail non prêt ou trop coûteux | 2 | Marketing + Finance + Sales | Après pilote CHR |',
+  '| R12 | Qualité / Réglementaire | Non-conformité étiquetage / allergènes / DLC | 2 | Qualité / Réglementaire | Avant commercialisation |',
+  '',
+  '## Lecture criticité',
+  '• **Criticité 3** (rouge) : 4 risques — escalade sponsor immédiate · plans d\'action prioritaires.',
+  '• **Criticité 2** (orange) : 8 risques — surveillance active · plans préventifs validés en COC.',
+  '',
+  '## Top 3 priorités',
+  '• **R3 — Baker expert** : recruter / mandater immédiatement, sinon retard qualité et délai.',
+  '• **R1 — Qualité produit** : ne pas lancer si rendu inférieur à Amoud / Paul. Triple Go obligatoire.',
+  '• **R8 — Chaîne du froid** : test complet stockage / transport / réception client avant pilote.'
+].join('\n');
+
+const VIEN_RESSOURCES_V1 = [
+  '## 1. Ressources humaines projet',
+  '| Ressource | Besoin | Priorité | Commentaire |',
+  '|---|---|---|---|',
+  '| Sponsor (Malika Lamrani) | Temps d\'arbitrage | Critique | Validation jalons et Go / No-Go |',
+  '| Project Leader (HN) | Temps projet significatif | Critique | Pilotage quotidien + coordination industrielle |',
+  '| Co-leader (HT) | Coordination | Élevée | Suivi transverse, relances, formalisation décisions |',
+  '| R&D / Baker expert viennoiserie | Mission dédiée | **Critique** | Ressource la plus urgente à sécuriser |',
+  '| Qualité MBI | Temps partiel régulier | Critique | Sécurité, process, chaîne du froid, documentation |',
+  '| Supply / Appro | Temps partiel | Élevée | Sourcing MP, disponibilité, coûts, stockage froid |',
+  '| Finance / CDG (FK) | Temps partiel dès le début | Critique | Prix de revient, marge, P&L, seuil Go |',
+  '| Sales / Distribution | À recruter ou relais provisoire | Élevée | Clients pilotes, RTM, retours terrain |',
+  '| Marketing (MH) | Temps partiel | Élevée | Positionnement, argumentaire, packaging, benchmark |',
+  '| ADV / facturation | Support ponctuel pré-pilote | Moyenne | Process commandes, facturation, suivi client |',
+  '',
+  '## 2. Budget R&D et développement produit',
+  '| Poste | Besoin | Priorité |',
+  '|---|---|---|',
+  '| Mission Baker / ingénieur R&D viennoiserie | Recettes, benchmark, essais, optimisation process | **Critique** |',
+  '| Benchmark produits | Achats Amoud / Paul / Chaupain, dégustations, comparatifs | Élevée |',
+  '| Essais matières premières | Farine, beurre / MG, chocolat, levure, garnitures | Critique |',
+  '| Tests recettes | Croissant, pain au chocolat, pain aux raisins / escargot | Critique |',
+  '| Tests décongélation / cuisson | Temps, rendu, simplicité, tolérance écarts | Critique |',
+  '| Analyses qualité / sécurité | DLC, stabilité, microbio, allergènes | Élevée |',
+  '| Dégustations internes | Panels, grille notation, arbitrages recette | Élevée |',
+  '',
+  '## 3. Budget industriel et opérations',
+  '| Poste | Besoin | Priorité |',
+  '|---|---|---|',
+  '| Essais industriels pilotes | Temps ligne, MO, pertes matières | Critique |',
+  '| Adaptations équipement | Outillage, plaques, chariots, réglages | À vérifier |',
+  '| Surgélation | Capacité froid, temps cycle, énergie | Critique |',
+  '| Stock initial pilote | Limité aux 3 références cœur | Élevée |',
+  '| Stockage froid négatif | Capacité, rotation, T° | Critique |',
+  '| Transport froid | Livraison clients pilotes, relevés T° | Élevée |',
+  '| Pertes / rebuts | Suivi pertes R&D, process, cuisson, stockage | Élevée |',
+  '',
+  '## 4. Budget commercial et marketing',
+  '| Poste | Besoin | Priorité |',
+  '|---|---|---|',
+  '| Échantillons clients | Packs test pour 5 à 10 clients pros | Critique |',
+  '| Démonstrations cuisson | Accompagnement client lors des 1ers tests | Élevée |',
+  '| Supports commerciaux | Fiche, argumentaire, mode opératoire, tarifs pilote | Élevée |',
+  '| Packaging CHR pilote | Carton / sachet pro simple | Critique |',
+  '| Packaging retail | Sachet conso, visuel, mode d\'emploi | Phase 2 |',
+  '| Activation retail / dégustation | Animation GMS, cuisson sur place | Phase 2 |',
+  '| Branding / marque | Territoire premium local | Élevée |',
+  '',
+  '## 5. Budget qualité, réglementaire et juridique',
+  '| Poste | Besoin | Priorité |',
+  '|---|---|---|',
+  '| Fiches techniques | Par référence produit | Critique |',
+  '| Étiquetage / allergènes | Mentions réglementaires, ingrédients, conservation | Critique |',
+  '| DLC / DDM | Validation durée conservation surgelé | Critique |',
+  '| Traçabilité | Lots MP, prod, stockage, livraison | Critique |',
+  '| Procédure chaîne du froid | Production -> stockage -> transport -> client | Critique |',
+  '| CGV / contrat pilote | Conditions de vente, responsabilité stockage client | Élevée |',
+  '| Accord partenaire commercial | Conditions retail / GMS, exclusivité éventuelle | Phase 2 |',
+  '',
+  '## 6. Budget par phases',
+  '| Phase | Objectif | Budget à prévoir | Décision sortie |',
+  '|---|---|---|---|',
+  '| Phase 0 — Cadrage | Brief, gamme, équipe, QCD | Temps équipe interne | Go R&D |',
+  '| Phase 1 — R&D / benchmark | Développer 3 références cœur | Mission Baker, MP, essais, dégustations | Go recette |',
+  '| Phase 2 — Essais industriels | Stabiliser process et coûts | Temps ligne, pertes, surgélation, qualité | Go industriel |',
+  '| Phase 3 — Pilote CHR | Tester clients pros | Échantillons, transport froid, supports | Go commercial |',
+  '| Phase 4 — Retail / GMS | Tester Marjane / GMS | Packaging retail, référencement, animation | Go retail |',
+  '| Phase 5 — Déploiement | Étendre clients et villes | Stock initial, sales, logistique, ADV | Go scale-up |',
+  '',
+  '## 7. Synthèse direction générale',
+  '_Le projet ne nécessite pas encore un budget de déploiement complet. Il nécessite d\'abord un budget de validation, concentré sur les éléments qui conditionnent le Go / No-Go :_',
+  '• R&D / Baker expert viennoiserie',
+  '• Essais matières premières et recettes',
+  '• Tests industriels',
+  '• Validation qualité et chaîne du froid',
+  '• P&L par référence',
+  '• Échantillons clients pilotes',
+  '_Recommandation : ne pas engager de dépenses lourdes en packaging retail, stock important ou déploiement commercial tant que le produit n\'a pas passé les 3 validations : qualité, marge, exécution client._'
+].join('\n');
+
+const VIEN_DECISIONS_V1 = [
+  '## 1. Décisions à prendre maintenant',
+  '| Décision | Recommandation | Décideur | Urgence |',
+  '|---|---|---|---|',
+  '| 1. Valider le Go R&D | Oui, sur gamme courte de 3 références cœur | Sponsor + Leader | Immédiate |',
+  '| 2. Valider la gamme | Croissant premium, pain au chocolat, pain aux raisins / escargot | Sponsor + Leader + Marketing | Immédiate |',
+  '| 3. Valider le budget de validation | Budget R&D, benchmark, MP, essais, qualité | Sponsor + Finance | Immédiate |',
+  '| 4. Recruter / mandater Baker expert | Priorité absolue du projet | Sponsor + Leader | Immédiate |',
+  '| 5. Confirmer canal pilote | CHR / coffee shops / hôtels Casablanca en priorité | Sponsor + Sales + Marketing | Court terme |',
+  '| 6. Statuer sur Partenaire Retail | Marjane à explorer phase 2 ou co-pilote si opportunité | Sponsor + Marketing + Sales | Court terme |',
+  '| 7. Valider critères Go / No-Go | Go qualité + Go marge + Go exécution client obligatoires | Sponsor + Core Team | Immédiate |',
+  '',
+  '## 2. Points bloquants',
+  '| Point bloquant | Impact | Décision attendue |',
+  '|---|---|---|',
+  '| Absence de Baker expert viennoiserie | Bloque qualité, délai, crédibilité | Lancer immédiatement recrutement / mission externe |',
+  '| Seuil de marge Go non défini | Impossible décision économique | Finance / CDG doit définir le seuil minimum |',
+  '| Benchmark non réalisé | Niveau qualité non objectivé | Organiser test Amoud / Paul / Chaupain |',
+  '| Chaîne du froid non testée | Risque qualité et sécurité terrain | Test complet avant pilote client |',
+  '| Clients pilotes non identifiés | Impossible valider l\'usage réel | Sales / Marketing : short-list |',
+  '| Mode opératoire cuisson non stabilisé | Risque échec chez client final | R&D + Qualité : fiche simple |',
+  '| P&L par référence absent | Pas de Go commercial possible | Finance : P&L par référence et canal |',
+  '',
+  '## 3. Informations manquantes',
+  '| Information | Pourquoi nécessaire | Responsable |',
+  '|---|---|---|',
+  '| Coût mission R&D externe | Dimensionner budget Go R&D | Leader + Finance |',
+  '| Liste fournisseurs MP | Sécuriser coût, qualité, disponibilité | Supply / Appro |',
+  '| Coût complet par référence | Définir marge et prix de vente | Finance / CDG |',
+  '| Capacité industrielle | Confirmer faisabilité prod locale | HN / Industriel |',
+  '| Capacité froid négatif | Confirmer stockage et rotation | Supply + Foodipex |',
+  '| Coût logistique pilote | Évaluer rentabilité CHR | Supply + Finance |',
+  '| Liste clients pilotes | Préparer test terrain | Sales + Marketing |',
+  '| Position de Marjane | Clarifier retail phase 2 ou co-développement | Sponsor + Marketing |',
+  '| Niveau prix concurrence | Positionner offre iso / premium accessible | Marketing + Sales |',
+  '| Besoin packaging CHR / retail | Séparer pilote pro et phase GMS | Marketing + Supply |',
+  '',
+  '## 4. Prochaines étapes recommandées',
+  '| Étape | Livrable | Responsable | Échéance |',
+  '|---|---|---|---|',
+  '| 1. Valider brief complet | Brief projet validé | Sponsor + Leader | Immédiat |',
+  '| 2. Lancer recherche Baker | Short-list profils / prestataires | Leader + Sponsor | Immédiat |',
+  '| 3. Organiser benchmark | Grille comparative Amoud / Paul / Chaupain | R&D + Marketing + Qualité | Court terme |',
+  '| 4. Chiffrer budget Go R&D | Budget essais + mission + MP + qualité | Finance + Leader | Court terme |',
+  '| 5. Sécuriser fournisseurs MP | Short-list beurre / chocolat / farine | Supply / Appro | Court terme |',
+  '| 6. Développer prototypes V1 | Croissant, pain chocolat, escargot | R&D + HN | Après Go R&D |',
+  '| 7. Construire P&L par référence | Prix de revient + marge + seuil Go | Finance / CDG | Dès prototypes V1 |',
+  '| 8. Identifier clients pilotes | Liste 5 à 10 clients CHR / coffee shops / hôtels | Sales + Marketing | Avant pilote |',
+  '| 9. Tester chaîne du froid | Rapport test stockage / livraison / T° | Supply + Qualité | Avant pilote |',
+  '| 10. Décider Go pilote CHR | Décision sponsor formalisée | Sponsor + Core Team | Après validation QCD |',
+  '',
+  '## 5. Décision recommandée à la direction',
+  '_**Valider le passage en Go R&D / validation, mais ne pas valider encore le Go lancement marché.**_',
+  '_Le projet doit avancer car l\'opportunité est réelle et cohérente avec la stratégie Mabya. Le lancement commercial doit rester conditionné à 3 validations obligatoires :_',
+  '| Condition | Critère de décision |',
+  '|---|---|',
+  '| Go Qualité | Produit validé face aux benchmarks Amoud / Paul / Chaupain |',
+  '| Go Marge | Marge minimale validée par Finance / CDG |',
+  '| Go Exécution client | Mode opératoire simple, chaîne du froid maîtrisée, retours pilotes positifs |',
+  '',
+  '## 6. Décision formelle proposée',
+  '| Décision | Statut |',
+  '|---|---|',
+  '| Validation du brief projet | **Go** |',
+  '| Validation gamme cœur 3 références | **Go** |',
+  '| Validation budget R&D / validation | À arbitrer immédiatement |',
+  '| Recrutement / mission Baker expert | **Go prioritaire** |',
+  '| Lancement essais R&D | Go après budget + Baker identifié |',
+  '| Lancement pilote CHR | No-Go à date — après validation QCD |',
+  '| Lancement retail / GMS | No-Go à date — phase 2 |',
+  '| Déploiement marché | No-Go à date — après pilote réussi |',
+  '',
+  '## 7. Synthèse direction générale',
+  '_La décision à prendre n\'est pas "Lance-t-on la viennoiserie surgelée ?"_',
+  '_La bonne décision est : "Validons-nous les moyens nécessaires pour prouver rapidement que Mabya peut produire localement une viennoiserie surgelée premium, rentable et simple à exécuter ?"_',
+  '_La recommandation est **oui**, avec un Go R&D immédiat, une gamme courte, un budget de validation, un Baker expert, et un passage en pilote uniquement après preuve qualité / marge / exécution._'
+].join('\n');
+
+const VIEN_RISQUES_DETAIL_V1 = [
+  { id:'R1',  categorie:'R&D / Qualité',         description:'Qualité produit insuffisante vs benchmark Amoud / Paul.',                            proba:2, impact:4, criticite:3, actionPreventive:'Benchmark sensoriel, grille qualité, multiplier essais R&D avant Go pilote.', actionCorrective:'', owner:'R&D externe + Qualité + HN', echeance:'Avant Go pilote',            statut:'Ouvert',     declencheurSecours:'' },
+  { id:'R2',  categorie:'R&D / Marketing',       description:'Produit non différenciant vs Chaupain.',                                              proba:2, impact:3, criticite:2, actionPreventive:'Comparer goût, texture, temps décongél.-cuisson, simplicité, rendu final.', actionCorrective:'', owner:'Marketing + R&D + Qualité', echeance:'Avant validation recette',   statut:'Ouvert',     declencheurSecours:'' },
+  { id:'R3',  categorie:'Project',                description:'Absence ou retard du profil R&D / Baker expert viennoiserie.',                       proba:3, impact:4, criticite:3, actionPreventive:'Lancer immédiatement recherche prestataire externe ou consultant expert.',  actionCorrective:'', owner:'Sponsor + Leader',         echeance:'Immédiat',                    statut:'Ouvert',     declencheurSecours:'' },
+  { id:'R4',  categorie:'Supply / Finance',      description:'Coût matières premières trop élevé.',                                                 proba:3, impact:3, criticite:2, actionPreventive:'Qualifier plusieurs fournisseurs (beurre, MG, chocolat, farine, levure) ; simuler alternatives.', actionCorrective:'', owner:'Supply / Appro + Finance', echeance:'Avant P&L',                   statut:'Ouvert',     declencheurSecours:'' },
+  { id:'R5',  categorie:'Finance',               description:'Marge insuffisante au prix marché.',                                                  proba:2, impact:4, criticite:3, actionPreventive:'Construire prix de revient complet par référence ; définir seuil de marge Go / No-Go.', actionCorrective:'', owner:'Finance / CDG (FK)',       echeance:'Avant décision lancement',   statut:'Ouvert',     declencheurSecours:'' },
+  { id:'R6',  categorie:'Industriel',            description:'Process industriel instable.',                                                        proba:2, impact:3, criticite:2, actionPreventive:'Essais pilotes industriels sur 3 références cœur ; mesurer pertes, rendement, régularité.', actionCorrective:'', owner:'HN + Industriel + Qualité', echeance:'Avant test client',           statut:'Ouvert',     declencheurSecours:'' },
+  { id:'R7',  categorie:'R&D / Qualité',         description:'Temps de décongélation / cuisson trop long ou complexe.',                              proba:2, impact:3, criticite:2, actionPreventive:'Simplifier mode opératoire ; tester chez clients non experts ; documenter fiche cuisson claire.', actionCorrective:'', owner:'R&D + Qualité + Sales',     echeance:'Avant pilote CHR',            statut:'Ouvert',     declencheurSecours:'' },
+  { id:'R8',  categorie:'Supply / Qualité',      description:'Rupture de chaîne du froid jusqu\'au client final.',                                  proba:2, impact:4, criticite:3, actionPreventive:'Tester transport, stockage, livraison, conservation client avec relevés température.',  actionCorrective:'', owner:'Supply + Foodipex + Qualité',echeance:'Avant pilote terrain',        statut:'Ouvert',     declencheurSecours:'Alerte T° dépassée à la réception' },
+  { id:'R9',  categorie:'Sales / Marketing',     description:'Mauvaise adoption par clients habitués au frais.',                                    proba:2, impact:3, criticite:2, actionPreventive:'Dégustations comparatives, démos cuisson, argumentaire "qualité boulangerie + praticité".', actionCorrective:'', owner:'Sales + Marketing',         echeance:'Pendant pilote',              statut:'Ouvert',     declencheurSecours:'' },
+  { id:'R10', categorie:'Supply / Finance',      description:'Stock initial mal dimensionné.',                                                      proba:2, impact:2, criticite:2, actionPreventive:'Lancer avec volumes limités, suivre rotation, DLC, pertes, réassort client.',          actionCorrective:'', owner:'Supply + Finance + ADV',    echeance:'Phase pilote',                statut:'Ouvert',     declencheurSecours:'' },
+  { id:'R11', categorie:'Marketing / Finance',   description:'Packaging retail non prêt ou trop coûteux.',                                          proba:2, impact:2, criticite:2, actionPreventive:'Démarrer CHR en priorité ; traiter retail / GMS en phase 2 après validation produit.',  actionCorrective:'', owner:'Marketing + Finance + Sales', echeance:'Après pilote CHR',           statut:'Ouvert',     declencheurSecours:'' },
+  { id:'R12', categorie:'Qualité / Réglementaire', description:'Non-conformité étiquetage / allergènes / DLC.',                                      proba:2, impact:3, criticite:2, actionPreventive:'Valider fiches techniques, allergènes, DLC, mentions produit, conditions conservation.', actionCorrective:'', owner:'Qualité / Réglementaire',   echeance:'Avant commercialisation',     statut:'Ouvert',     declencheurSecours:'' }
+];
+
+if (!STATE.migrations.vienCompleteV1) {
+  const vien = STATE.projets.find(pp => pp.id === 'viennoiserie');
+  if (vien) {
+    if (vien.sections) {
+      Object.entries(VIEN_FEAS_V1).forEach(([axe, val]) => {
+        vien.sections['feas_' + axe] = val;
+      });
+      vien.sections.risquesMajeurs = VIEN_RISQUES_SUMMARY_V1;
+      vien.sections.ressources_summary = VIEN_RESSOURCES_V1;
+      vien.sections.productKeyFacts = VIEN_DECISIONS_V1;
+    }
+    if (!vien.risques) vien.risques = [];
+    if (vien.risques.length === 0) {
+      vien.risques = VIEN_RISQUES_DETAIL_V1.map(r => ({ ...r, createdAt: new Date().toISOString() }));
+    }
+  }
+  STATE.migrations.vienCompleteV1 = true;
+  try { Storage.save(STATE); } catch(e) {}
+}
+
+// Rétroplanning Viennoiserie : 6 phases (mai 2026 → janvier 2027) + 6 jalons + 22 tâches
+const VIEN_RETRO_PHASES_V1 = [
+  { id:'Genese',        debut: '2026-05-01', fin: '2026-05-31' },  // Cadrage final
+  { id:'Definition',    debut: '2026-06-01', fin: '2026-07-15' },  // R&D / benchmark / prototypes V1
+  { id:'Developpement', debut: '2026-07-16', fin: '2026-08-31' },  // Recettes V2/V3 + tests internes
+  { id:'Realisation',   debut: '2026-09-01', fin: '2026-09-30' },  // Industrialisation pilote + P&L
+  { id:'Lancement',     debut: '2026-10-01', fin: '2026-12-31' },  // Pilote CHR Casablanca
+  { id:'Evaluation',    debut: '2027-01-01', fin: '2027-01-31' }   // Bilan + Go déploiement
+];
+
+const VIEN_RETRO_JALONS_V1 = [
+  { phase:'Genese',        nom:'Go Définition',    date:'2026-05-31', justif:'Brief validé, gamme cœur (3 références) confirmée, budget Go R&D arbitré, Baker expert identifié.' },
+  { phase:'Definition',    nom:'Go Développement', date:'2026-07-15', justif:'Benchmark Amoud / Paul / Chaupain réalisé, prototypes V1 développés, premiers retours dégustation interne.' },
+  { phase:'Developpement', nom:'Go Réalisation',   date:'2026-08-31', justif:'Recettes V2/V3 stabilisées, tests internes validés, dégustation interne conforme grille qualité.' },
+  { phase:'Realisation',   nom:'Go Lancement',     date:'2026-09-30', justif:'Process industriel stable, mode opératoire simple validé, chaîne du froid sécurisée, P&L par référence + seuil marge Go.' },
+  { phase:'Lancement',     nom:'Go Évaluation',    date:'2026-12-31', justif:'Pilote CHR réalisé chez 5 à 10 clients, retours collectés (satisfaction, usage, réachat, prix).' },
+  { phase:'Evaluation',    nom:'Go Fin projet',    date:'2027-01-31', justif:'Décision déploiement progressif Q1 2027 / corrections / éventuelle ouverture retail Marjane.' }
+];
+
+const VIEN_RETRO_TACHES_V1 = [
+  ['Genese',        'Validation du brief projet (Sections 1 à 12)',                                       'Cadrage','Sponsor + Leader','2026-05-01','2026-05-05',true],
+  ['Genese',        'Validation gamme prioritaire (croissant, pain chocolat, escargot)',                  'Mix produit','Sponsor + Leader + Marketing','2026-05-01','2026-05-08',true],
+  ['Genese',        'Validation budget Go R&D',                                                          'Finance','Sponsor + Finance','2026-05-08','2026-05-15',true],
+  ['Genese',        'Sélection R&D / Baker expert viennoiserie',                                          'R&D','Leader + Sponsor','2026-05-08','2026-05-31',true],
+  ['Genese',        'Sourcing matières premières (short-list fournisseurs MP critiques)',                 'Sourcing','Supply + Finance','2026-05-15','2026-05-31',true],
+  ['Genese',        'Validation Go Définition',                                                          'Gouvernance','Sponsor','2026-05-31','2026-05-31',true],
+  ['Definition',    'Benchmark marché (grille Amoud / Paul / Chaupain)',                                  'Marché','R&D + Marketing + Qualité','2026-06-01','2026-06-21',true],
+  ['Definition',    'Développement prototypes V1 (3 références cœur)',                                    'R&D','R&D + HN','2026-06-01','2026-07-10',true],
+  ['Definition',    'Tests internes V1 (dégustation + grille qualité + corrections)',                     'Qualité','R&D + Qualité + Marketing','2026-07-08','2026-07-15',true],
+  ['Definition',    'Validation Go Développement',                                                       'Gouvernance','Sponsor','2026-07-15','2026-07-15',true],
+  ['Developpement', 'Prototypes V2 / V3 (recettes corrigées et stabilisées)',                              'R&D','R&D + HN','2026-07-16','2026-08-22',true],
+  ['Developpement', 'Tests décongélation / cuisson — mode opératoire simple validé',                       'Qualité','R&D + Qualité','2026-08-01','2026-08-22',true],
+  ['Developpement', 'Validation chaîne du froid (production -> stockage -> livraison -> client)',          'Logistique','Supply + Foodipex + Qualité','2026-08-15','2026-08-31',true],
+  ['Developpement', 'Validation Go Réalisation',                                                         'Gouvernance','Sponsor','2026-08-31','2026-08-31',true],
+  ['Realisation',   'Essais industriels pilotes (process local, rendements, pertes)',                     'Industriel','HN + Industriel + Qualité','2026-09-01','2026-09-21',true],
+  ['Realisation',   'Calcul prix de revient complet (P&L par référence + seuil marge Go)',                'Finance','Finance / CDG (FK)','2026-09-08','2026-09-25',true],
+  ['Realisation',   'Sélection clients pilotes (5 à 10 clients CHR / coffee shops / hôtels Casablanca)',   'Commercial','Sales + Marketing','2026-09-15','2026-09-25',true],
+  ['Realisation',   'Supports commerciaux pilote (fiches, mode d\'emploi, tarifs, argumentaire)',          'Commercial','Marketing + Sales + Qualité','2026-09-22','2026-09-30',true],
+  ['Realisation',   'Validation Go Lancement (triple Go : qualité + marge + exécution)',                  'Gouvernance','Sponsor + Core Team','2026-09-30','2026-09-30',true],
+  ['Lancement',     'Lancement pilote CHR Casablanca (5 à 10 clients)',                                    'Commercial','Sales + Supply + Qualité','2026-10-01','2026-11-30',true],
+  ['Lancement',     'Retour d\'expérience pilote (satisfaction, usage, réachat, prix, incidents)',         'Pilotage','Sales + Marketing + Qualité + Finance','2026-12-01','2026-12-20',true],
+  ['Lancement',     'Validation Go Évaluation',                                                          'Gouvernance','Sponsor','2026-12-31','2026-12-31',true],
+  ['Evaluation',    'Ajustements produit / coût / process avant déploiement',                            'Pilotage','Leader + R&D + Finance + Qualité','2027-01-01','2027-01-15',false],
+  ['Evaluation',    'Préparation retail / GMS (packaging, conditions commerciales, partenaire Marjane)',  'Commercial','Marketing + Sales + Finance','2027-01-15','2027-01-25',false],
+  ['Evaluation',    'Décision Go / No-Go déploiement progressif Q1 2027',                                'Gouvernance','Sponsor + Core Team','2027-01-25','2027-01-31',true]
+];
+
+if (!STATE.migrations.vienRetroV1) {
+  const vien = STATE.projets.find(pp => pp.id === 'viennoiserie');
+  if (vien && vien.retroplanning) {
+    vien.retroplanning.phases = PHASES.map(ph => {
+      const dat = VIEN_RETRO_PHASES_V1.find(d => d.id === ph.id);
+      return { id: ph.id, nom: ph.nom, debut: dat?.debut || '', fin: dat?.fin || '' };
+    });
+    vien.retroplanning.jalons = PHASES.map((ph, i) => {
+      const j = VIEN_RETRO_JALONS_V1[i] || {};
+      return { id:'j'+i, phase: ph.id, nom: j.nom||('Go '+(PHASES[i+1]?.nom||'Fin projet')), date: j.date||'', decision:'Pending', justif: j.justif||'' };
+    });
+    vien.retroplanning.taches = VIEN_RETRO_TACHES_V1.map((t, i) => {
+      const [phaseKey, titre, lot, owner, debut, fin, critique] = t;
+      return {
+        id: 'tVien' + (i+1).toString().padStart(2,'0'),
+        phaseKey, titre, lot, owner, debut, fin,
+        dureeJours: Math.max(1, Math.round((new Date(fin) - new Date(debut)) / 86400000) + 1),
+        avancement: 0, antecedents: [], critique: !!critique,
+        createdAt: new Date().toISOString()
+      };
+    });
+  }
+  STATE.migrations.vienRetroV1 = true;
+  try { Storage.save(STATE); } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // MIGRATIONS PROJET PAIN — DORELYS V1 (Brief complet 12 sections)
 // Pack global : co-leader + nom + contrat DQC + sections markdown structurées
 // ═══════════════════════════════════════════════════════════════════
