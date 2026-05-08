@@ -2497,9 +2497,9 @@ function migrateProjet(p) {
 // ═══════════════════════════════════════════════════════════════════
 const TEAMS_OFFICIAL = {
   pain: {
-    coleader: 'Hervé Delajoux',
+    coleader: 'Driss Lamrani + HT',
     sponsor:  'Youssef Lamrani',
-    leader:   'Driss Lamrani',
+    leader:   'Hicham Najme',
     core: [
       ['R&D',           'Intérim HN + prestataire externe à recruter',                  '', 'Profil Ingénieur / Baker orienté développement et benchmark — piste AM à vérifier'],
       ['Industriel',    'HN (Hossein)',                                                  '', 'Expert production — garant procédés industriels et capacité'],
@@ -4287,7 +4287,8 @@ const PAIN_MIX_V1 = [
 if (!STATE.migrations.painPackV1) {
   const pain = STATE.projets.find(pp => pp.id === 'pain');
   if (pain && pain.sections) {
-    pain.coleader = 'Hervé Delajoux + Hossein Tazi';
+    pain.leader = 'Hicham Najme';
+    pain.coleader = 'Driss Lamrani + HT';
     pain.sections.delaiCdc   = PAIN_CONTRAT_DQC_V1.delaiCdc;
     pain.sections.qualiteCdc = PAIN_CONTRAT_DQC_V1.qualiteCdc;
     pain.sections.coutCdc    = PAIN_CONTRAT_DQC_V1.coutCdc;
@@ -4347,8 +4348,8 @@ const PAIN_RESSOURCES_V1 = [
   '## 1. Ressources humaines nécessaires',
   '| Fonction | Ressource | Besoin | Commentaire |',
   '|---|---|---|---|',
-  '| Project Leader | Driss Lamrani | Temps partiel projet | Pilotage, arbitrages, coordination |',
-  '| Co-leader | Hervé Delajoux + Hossein Tazi | Temps partiel projet | Suivi technique et opérationnel |',
+  '| Project Leader | Hicham Najme | Temps partiel projet | Pilotage, arbitrages, coordination |',
+  '| Co-leader | Driss Lamrani + HT | Temps partiel projet | Suivi technique et opérationnel |',
   '| R&D | HN + prestataire baker / ingénieur | Fort besoin en phase dev | Ressource critique pour accélérer recettes et benchmark |',
   '| Industriel | HN | Fort besoin pendant essais | Tests process, rendement, capacité, industrialisation |',
   '| Qualité | Qualiticienne MBI | Temps partiel régulier | Contrôles, fiches techniques, conformité |',
@@ -4519,6 +4520,22 @@ const PAIN_RISQUES_DETAIL_V1 = [
   { id:'R11',categorie:'Qualité / Supply',      description:'Exigences export sous-estimées.',                                                proba:2, impact:3, criticite:2, actionPreventive:'Lister exigences par marché : étiquetage, documents, certificats, DLC, halal éventuel.',          actionCorrective:'', owner:'Qualité + Supply + Sales export', echeance:'Avant prospection active', statut:'Ouvert',  declencheurSecours:'' },
   { id:'R12',categorie:'Project',               description:'Manque de ressource commerciale dédiée.',                                        proba:3, impact:2, criticite:2, actionPreventive:'Prioriser recrutement ou affectation Sales mutualisé sur les 3 projets.',                          actionCorrective:'', owner:'Sponsor + Leader',     echeance:'Avant lancement pilote',        statut:'Ouvert',     declencheurSecours:'' }
 ];
+
+// ── Migration painLeadersV2 : MAJ leader/co-leader Pain DORELYS ──
+// Leader Driss Lamrani → Hicham Najme · Co-leader Hervé Delajoux + Hossein Tazi → Driss Lamrani + HT
+if (!STATE.migrations.painLeadersV2) {
+  const pain = STATE.projets.find(pp => pp.id === 'pain');
+  if (pain) {
+    pain.leader = 'Hicham Najme';
+    pain.coleader = 'Driss Lamrani + HT';
+    // Mettre à jour aussi la section Ressources si déjà migrée
+    if (pain.sections && pain.sections.ressources_summary) {
+      pain.sections.ressources_summary = PAIN_RESSOURCES_V1;
+    }
+  }
+  STATE.migrations.painLeadersV2 = true;
+  try { Storage.save(STATE); } catch(e) {}
+}
 
 if (!STATE.migrations.painCompleteV1) {
   const pain = STATE.projets.find(pp => pp.id === 'pain');
