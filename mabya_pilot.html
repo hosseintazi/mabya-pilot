@@ -1273,6 +1273,29 @@ input[type="date"], input[type="number"] { width:100%; }
 .org-cell.leader .org-role { color:var(--green-deep); }
 .org-name { font-size:13px; font-weight:700; color:var(--green-deep); margin-top:2px; line-height:1.3; }
 .org-cell.sponsor .org-name { color:#fff; }
+/* Édition inline des noms dans l'organigramme */
+.org-name[contenteditable="true"] {
+  cursor:text;
+  border-radius:4px;
+  padding:1px 6px;
+  transition:background var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+  outline:none;
+}
+.org-name[contenteditable="true"]:hover {
+  background:rgba(76, 175, 120, 0.12);
+}
+.org-cell.sponsor .org-name[contenteditable="true"]:hover {
+  background:rgba(255, 255, 255, 0.18);
+}
+.org-name[contenteditable="true"]:focus {
+  background:#fff;
+  box-shadow:0 0 0 2px var(--orange-mid);
+  color:var(--text);
+}
+.org-cell.sponsor .org-name[contenteditable="true"]:focus {
+  background:#fff;
+  color:var(--green-deep);
+}
 .org-groups {
   display:grid;
   grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
@@ -5422,18 +5445,27 @@ function renderCadrageEquipe(p) {
       <div class="org-level">
         <div class="org-cell sponsor">
           <div class="org-role">Sponsor</div>
-          <div class="org-name">${escapeHtml(p.sponsor) || '—'}</div>
+          <div class="org-name" contenteditable="true" data-edit-prop="sponsor"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+               onfocusout="updateProj('sponsor', this.textContent.trim().replace(/^—$/, ''))"
+               title="Cliquez pour modifier">${escapeHtml(p.sponsor) || '—'}</div>
         </div>
       </div>
       <div class="org-connector"></div>
       <div class="org-level">
         <div class="org-cell leader">
           <div class="org-role">Project Leader</div>
-          <div class="org-name">${escapeHtml(p.leader) || '—'}</div>
+          <div class="org-name" contenteditable="true" data-edit-prop="leader"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+               onfocusout="updateProj('leader', this.textContent.trim().replace(/^—$/, ''))"
+               title="Cliquez pour modifier">${escapeHtml(p.leader) || '—'}</div>
         </div>
         <div class="org-cell leader" style="opacity:${p.coleader?'1':'.6'}">
           <div class="org-role">Co-leader</div>
-          <div class="org-name">${escapeHtml(p.coleader) || '—'}</div>
+          <div class="org-name" contenteditable="true" data-edit-prop="coleader"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+               onfocusout="updateProj('coleader', this.textContent.trim().replace(/^—$/, ''))"
+               title="Cliquez pour modifier">${escapeHtml(p.coleader) || '—'}</div>
         </div>
       </div>
     </div>
