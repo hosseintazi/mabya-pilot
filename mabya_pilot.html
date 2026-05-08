@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MabyaPilot — Pilotage Projets Groupe Mabya</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<!-- Librairies exports : SheetJS (Excel), jsPDF (PDF), PptxGenJS (PPTX) -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- Librairies exports : SheetJS+Style (Excel stylé), jsPDF (PDF), PptxGenJS (PPTX) -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/gitbrent/PptxGenJS@master/dist/pptxgen.bundle.js"></script>
 <style>
@@ -1977,6 +1977,14 @@ input[type="date"], input[type="number"] { width:100%; }
               <button class="export-menu-item" onclick="exportProjetExcel();closeExportMenu();">
                 <span style="font-size:18px;">📊</span>
                 <div><div style="font-weight:700;">Excel multi-onglets</div><div style="font-size:10.5px;color:var(--text2);">Cadrage / P&L / Rétro / Risques</div></div>
+              </button>
+              <button class="export-menu-item" onclick="exportPnLExcel();closeExportMenu();">
+                <span style="font-size:18px;">📈</span>
+                <div><div style="font-weight:700;">P&L Excel avec formules</div><div style="font-size:10.5px;color:var(--text2);">P&L 3 ans complet avec formules Excel actives</div></div>
+              </button>
+              <button class="export-menu-item" onclick="exportAllPnLExcel();closeExportMenu();">
+                <span style="font-size:18px;">📋</span>
+                <div><div style="font-weight:700;">P&L Portfolio complet</div><div style="font-size:10.5px;color:var(--text2);">Tous les projets + tous les scénarios</div></div>
               </button>
             </div>
             <button class="tb-btn" onclick="deleteCurrentProjet()" style="color:#991B1B;border-color:#FECACA;">🗑 Supprimer</button>
@@ -4986,6 +4994,123 @@ if (!STATE.migrations.distribRetroV1) {
   try { Storage.save(STATE); } catch(e) {}
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// MIGRATION SIMULATEUR P&L Distribution — SCÉNARIO SLM
+// (Stretch / consultant commercial). Trajectoire 30 / 60 / 100 Mdhs.
+// MB cible 35 %, EBITDA cible 10 %. Mix riche en gourmet / japonais / pain export.
+// Géographie : Casa / Rabat / Marrakech dès 2027.
+// ═══════════════════════════════════════════════════════════════════
+const PNL_DISTRIB_SLM_V1 = {
+  produits: [
+    // ── Premium volume ──────────────────────────────────────────────
+    { nom: 'Crevette HOSO 40/50',           canal: 'CHR Premium',  vol_n: 130000, vol_n1: 230000, vol_n2: 350000, prix_n: 70,  prix_n1: 70,  prix_n2: 70,  tva: 20 },
+    { nom: 'Calamar Pota tubes 200-300g',   canal: 'CHR Premium',  vol_n: 30000,  vol_n1: 65000,  vol_n2: 120000, prix_n: 45,  prix_n1: 45,  prix_n2: 45,  tva: 20 },
+    { nom: 'Caviar Beluga',                 canal: 'CHR Premium',  vol_n: 200,    vol_n1: 380,    vol_n2: 600,    prix_n: 6500,prix_n1: 6500,prix_n2: 6500,tva: 20 },
+    { nom: 'Saumon premium',                canal: 'CHR Premium',  vol_n: 8000,   vol_n1: 18000,  vol_n2: 30000,  prix_n: 110, prix_n1: 110, prix_n2: 110, tva: 20 },
+    { nom: 'Sauce truffe ≥ 5 %',            canal: 'CHR Premium',  vol_n: 200,    vol_n1: 400,    vol_n2: 600,    prix_n: 540, prix_n1: 560, prix_n2: 580, tva: 20 },
+    { nom: 'Frites premium HG resto',       canal: 'CHR Premium',  vol_n: 130000, vol_n1: 250000, vol_n2: 350000, prix_n: 35,  prix_n1: 35,  prix_n2: 35,  tva: 20 },
+    { nom: 'Bœuf premium',                  canal: 'CHR Premium',  vol_n: 12000,  vol_n1: 28000,  vol_n2: 50000,  prix_n: 120, prix_n1: 120, prix_n2: 120, tva: 20 },
+    { nom: 'Truffes Italie',                canal: 'CHR Premium',  vol_n: 200,    vol_n1: 480,    vol_n2: 800,    prix_n: 1800,prix_n1: 1800,prix_n2: 1800,tva: 20 },
+    { nom: 'Vinaigre balsamique premium',   canal: 'CHR Premium',  vol_n: 2000,   vol_n1: 5000,   vol_n2: 8000,   prix_n: 90,  prix_n1: 90,  prix_n2: 90,  tva: 20 },
+    { nom: 'Beurres / fromages foodservice',canal: 'CHR Premium',  vol_n: 18000,  vol_n1: 38000,  vol_n2: 60000,  prix_n: 80,  prix_n1: 80,  prix_n2: 80,  tva: 20 },
+    // ── 🆕 Pain export Mabya local (1,8 dhs/pièce EXW Casa) ─────────
+    { nom: '🆕 Pain export (1,8 dhs/pc EXW)',canal: 'Export',      vol_n: 5000000,vol_n1: 7000000,vol_n2: 12000000,prix_n: 1.8, prix_n1: 1.8, prix_n2: 1.8, tva: 0 },
+    // ── 🆕 Gamme japonaise (frais + surgelé + ambiant) ──────────────
+    { nom: '🆕 Thon HG sushi-grade',        canal: 'CHR Premium',  vol_n: 0,      vol_n1: 6000,   vol_n2: 12000,  prix_n: 280, prix_n1: 280, prix_n2: 280, tva: 20 },
+    { nom: '🆕 Saumon sushi-grade',         canal: 'CHR Premium',  vol_n: 0,      vol_n1: 12000,  vol_n2: 25000,  prix_n: 130, prix_n1: 130, prix_n2: 130, tva: 20 },
+    { nom: '🆕 Gyoza surgelé',              canal: 'CHR Standard', vol_n: 0,      vol_n1: 22000,  vol_n2: 50000,  prix_n: 75,  prix_n1: 75,  prix_n2: 75,  tva: 20 },
+    { nom: '🆕 Riz japonais koshihikari',   canal: 'CHR Premium',  vol_n: 0,      vol_n1: 18000,  vol_n2: 40000,  prix_n: 35,  prix_n1: 35,  prix_n2: 35,  tva: 20 },
+    { nom: '🆕 Sauces japonaises',          canal: 'CHR Premium',  vol_n: 0,      vol_n1: 6000,   vol_n2: 12000,  prix_n: 110, prix_n1: 110, prix_n2: 110, tva: 20 },
+    { nom: '🆕 Panko / tempura mix',        canal: 'CHR Standard', vol_n: 0,      vol_n1: 5000,   vol_n2: 10000,  prix_n: 50,  prix_n1: 50,  prix_n2: 50,  tva: 20 },
+    { nom: '🆕 Edamame / wakame surgelé',   canal: 'CHR Premium',  vol_n: 0,      vol_n1: 12000,  vol_n2: 25000,  prix_n: 60,  prix_n1: 60,  prix_n2: 60,  tva: 20 },
+    { nom: '🆕 Algues nori + sushi vinegar',canal: 'CHR Premium',  vol_n: 0,      vol_n1: 2500,   vol_n2: 5000,   prix_n: 200, prix_n1: 200, prix_n2: 200, tva: 20 },
+    { nom: '🆕 Ramen / nouilles',           canal: 'CHR Standard', vol_n: 0,      vol_n1: 7000,   vol_n2: 15000,  prix_n: 65,  prix_n1: 65,  prix_n2: 65,  tva: 20 }
+  ],
+  // Charges variables (% CA) — mix riche → MB ~ 35 %
+  chargesVar: [
+    { nom: 'Coût d\'achat produits',     categorie: 'COGS',       mode: 'pct_ca', val_n: 60,  val_n1: 60,  val_n2: 60 },
+    { nom: 'Logistique variable',        categorie: 'Logistique', mode: 'pct_ca', val_n: 3.5, val_n1: 3.5, val_n2: 3.5 },
+    { nom: 'Pertes / DLC',               categorie: 'Pertes',     mode: 'pct_ca', val_n: 1.5, val_n1: 1.5, val_n2: 1.5 }
+  ],
+  // MO directe — équipe opérationnelle alignée sur 100 clients année 1 + montée volume
+  moDirect: [
+    { fonction: 'Magasinier / préparateur',        fte_n: 1,   fte_n1: 3,   fte_n2: 5,   salaire_mensuel: Math.round(90000 / 13) },
+    { fonction: 'Chauffeur / livreur',             fte_n: 1,   fte_n1: 4,   fte_n2: 7,   salaire_mensuel: Math.round(90000 / 13) },
+    { fonction: 'Aide manutention / picking',      fte_n: 0,   fte_n1: 2,   fte_n2: 4,   salaire_mensuel: Math.round(75000 / 13) }
+  ],
+  // MO support — équipe commerciale renforcée (PREZ : KAM + grossistes + démonstrateurs)
+  moSupport: [
+    { fonction: 'Sales / Business Developer',         fte_n: 2,   fte_n1: 4,   fte_n2: 6,   salaire_mensuel: Math.round(225000 / 13) },
+    { fonction: '🆕 Key Account Manager (KAM)',       fte_n: 1,   fte_n1: 2,   fte_n2: 3,   salaire_mensuel: Math.round(280000 / 13) },
+    { fonction: '🆕 Démonstrateur technique',         fte_n: 1,   fte_n1: 2,   fte_n2: 3,   salaire_mensuel: Math.round(180000 / 13) },
+    { fonction: 'ADV / administration ventes',        fte_n: 1,   fte_n1: 2,   fte_n2: 4,   salaire_mensuel: Math.round(120000 / 13) },
+    { fonction: 'Supply / Appro',                     fte_n: 1,   fte_n1: 2,   fte_n2: 3,   salaire_mensuel: Math.round(180000 / 13) },
+    { fonction: 'Qualité / conformité',               fte_n: 0.5, fte_n1: 1,   fte_n2: 2,   salaire_mensuel: Math.round(180000 / 13) },
+    { fonction: 'Finance / CDG',                      fte_n: 0.3, fte_n1: 0.5, fte_n2: 1,   salaire_mensuel: Math.round(240000 / 13) }
+  ],
+  // CFD — montée significative pour absorber la trajectoire
+  chargesFixeDir: [
+    { nom: 'Quote-part stockage froid',            categorie: 'Stockage',    val_n: 600000,  val_n1: 1300000, val_n2: 2200000 },
+    { nom: 'Énergie froid / manutention',          categorie: 'Énergie',     val_n: 200000,  val_n1: 400000,  val_n2: 700000 },
+    { nom: 'Maintenance équipements froid',        categorie: 'Maintenance', val_n: 120000,  val_n1: 250000,  val_n2: 450000 },
+    { nom: 'Analyses qualité / contrôles',         categorie: 'Qualité',     val_n: 180000,  val_n1: 350000,  val_n2: 600000 },
+    { nom: 'Échantillons / tests clients',         categorie: 'Commercial',  val_n: 250000,  val_n1: 350000,  val_n2: 500000 },
+    { nom: 'Assurance marchandises',               categorie: 'Assurance',   val_n: 100000,  val_n1: 200000,  val_n2: 350000 }
+  ],
+  // CFI — marketing / siège / dev commercial multi-villes
+  chargesFixeIndir: [
+    { nom: 'Marketing / catalogue / fiches produits / branding', categorie: 'Marketing',  val_n: 500000,  val_n1: 900000,  val_n2: 1500000 },
+    { nom: 'Déplacements commerciaux Casa / Rabat / Marrakech',  categorie: 'Commercial', val_n: 350000,  val_n1: 650000,  val_n2: 1100000 },
+    { nom: 'Honoraires juridiques / contrats / marques',         categorie: 'Juridique',  val_n: 250000,  val_n1: 400000,  val_n2: 600000 },
+    { nom: 'IT / CRM / outils suivi / reporting',                categorie: 'IT',         val_n: 250000,  val_n1: 400000,  val_n2: 700000 },
+    { nom: 'Frais salons / prospection fournisseurs',            categorie: 'Sourcing',   val_n: 350000,  val_n1: 500000,  val_n2: 800000 },
+    { nom: 'Quote-part frais siège',                             categorie: 'Siège',      val_n: 400000,  val_n1: 750000,  val_n2: 1300000 }
+  ],
+  // CAPEX — flotte frigo conséquente pour 100+ clients multi-villes
+  capex: [
+    { nom: 'Matériel froid 2027',                                montant: 350000,  duree_amort: 5, annee_invest: 2027 },
+    { nom: 'Matériel froid 2028',                                montant: 200000,  duree_amort: 5, annee_invest: 2028 },
+    { nom: 'Matériel froid 2029',                                montant: 250000,  duree_amort: 5, annee_invest: 2029 },
+    { nom: 'Aménagement zones picking 2027',                     montant: 400000,  duree_amort: 7, annee_invest: 2027 },
+    { nom: 'Aménagement extension 2028 (multi-zones)',           montant: 350000,  duree_amort: 7, annee_invest: 2028 },
+    { nom: 'Aménagement extension 2029',                         montant: 600000,  duree_amort: 7, annee_invest: 2029 },
+    { nom: 'Équipement préparation 2027',                        montant: 180000,  duree_amort: 5, annee_invest: 2027 },
+    { nom: 'Équipement préparation 2028',                        montant: 150000,  duree_amort: 5, annee_invest: 2028 },
+    { nom: 'Équipement préparation 2029',                        montant: 250000,  duree_amort: 5, annee_invest: 2029 },
+    { nom: 'Véhicule frigo 2027 (1 unité)',                      montant: 350000,  duree_amort: 5, annee_invest: 2027 },
+    { nom: 'Véhicules frigo 2028 (3 unités)',                    montant: 1050000, duree_amort: 5, annee_invest: 2028 },
+    { nom: 'Véhicules frigo 2029 (5 unités)',                    montant: 1750000, duree_amort: 5, annee_invest: 2029 },
+    { nom: 'IT / CRM 2027',                                      montant: 350000,  duree_amort: 4, annee_invest: 2027 },
+    { nom: 'IT — évolutions 2028',                               montant: 200000,  duree_amort: 4, annee_invest: 2028 },
+    { nom: 'IT — évolutions 2029',                               montant: 300000,  duree_amort: 4, annee_invest: 2029 },
+    { nom: 'Branding 2027',                                      montant: 250000,  duree_amort: 3, annee_invest: 2027 },
+    { nom: 'Branding 2028 (campagne multi-villes)',              montant: 300000,  duree_amort: 3, annee_invest: 2028 },
+    { nom: 'Branding 2029',                                      montant: 400000,  duree_amort: 3, annee_invest: 2029 }
+  ]
+};
+
+if (!STATE.migrations.distribPnLSLMV1) {
+  const distrib = STATE.projets.find(p => p.id === 'distribution');
+  if (distrib && distrib.simulateur) {
+    let slmScen = (distrib.simulateur.scenarios || []).find(s => s.id === 'slm');
+    if (!slmScen) {
+      slmScen = makeScenario('slm', 'Scénario SLM', '');
+      distrib.simulateur.scenarios = distrib.simulateur.scenarios || [];
+      distrib.simulateur.scenarios.push(slmScen);
+    }
+    slmScen.description = 'Trajectoire CA 30 / 60 / 100 Mdhs sur 2027-2029. MB cible 35 %, EBITDA cible 10 %. Mix élargi : 11 références premium + 9 nouveautés (pain export 1,8 dhs/pc, gamme japonaise complète : thon sushi-grade, gyoza, riz koshihikari, sauces, panko, edamame, algues, ramen). Géographie Casa / Rabat / Marrakech. 100+ clients année 1 portés par 2 KAM + 6 Sales + 3 démonstrateurs.';
+    slmScen.produits         = PNL_DISTRIB_SLM_V1.produits.map(x         => ({ id: lid(), ...x }));
+    slmScen.chargesVar       = PNL_DISTRIB_SLM_V1.chargesVar.map(x       => ({ id: lid(), ...x }));
+    slmScen.moDirect         = PNL_DISTRIB_SLM_V1.moDirect.map(x         => ({ id: lid(), ...x }));
+    slmScen.moSupport        = PNL_DISTRIB_SLM_V1.moSupport.map(x        => ({ id: lid(), ...x }));
+    slmScen.chargesFixeDir   = PNL_DISTRIB_SLM_V1.chargesFixeDir.map(x   => ({ id: lid(), ...x }));
+    slmScen.chargesFixeIndir = PNL_DISTRIB_SLM_V1.chargesFixeIndir.map(x => ({ id: lid(), ...x }));
+    slmScen.capex            = PNL_DISTRIB_SLM_V1.capex.map(x            => ({ id: lid(), ...x }));
+  }
+  STATE.migrations.distribPnLSLMV1 = true;
+  try { Storage.save(STATE); } catch(e) {}
+}
+
 if (!STATE.migrations.distribPnLAgressifV1) {
   const distrib = STATE.projets.find(p => p.id === 'distribution');
   if (distrib && distrib.simulateur) {
@@ -7317,7 +7442,11 @@ function renderSimRecap(p, sc) {
   return `<div class="sim-recap">
     <div class="sim-recap-head">
       <div class="sim-recap-title">📊 Récap P&L auto-calculé</div>
-      <div class="sim-recap-scen">Scénario : ${escapeHtml(sc.nom)}</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="sim-recap-scen">Scénario : ${escapeHtml(sc.nom)}</div>
+        <button onclick="exportPnLExcel()" class="tb-btn" style="font-size:11px;padding:3px 10px;background:var(--green-mid);color:#fff;border:none;border-radius:6px;cursor:pointer;" title="Export P&L avec formules Excel">📥 Export P&L Excel</button>
+        <button onclick="exportAllPnLExcel()" class="tb-btn" style="font-size:11px;padding:3px 10px;background:var(--navy-bg);color:#fff;border:none;border-radius:6px;cursor:pointer;" title="Export P&L de tous les projets">📥 Tous les P&L</button>
+      </div>
     </div>
     <div class="sim-recap-kpis">
       <div class="sim-kpi accent">
@@ -7561,6 +7690,562 @@ function exportProjetJSON() {
   a.click();
   URL.revokeObjectURL(url);
   toast('Export JSON projet téléchargé');
+}
+
+// ─── 2bis. EXPORT P&L EXCEL AVEC FORMULES (STYLE) ─────────────────
+function buildPnLSheet(p, sc) {
+  const ws = {};
+  const h = p.simulateur.hypGen;
+  const y0 = h.annee_base;
+  let r = 0;
+
+  // ══════════════════════════════════════════════════
+  // PALETTE & STYLES
+  // ══════════════════════════════════════════════════
+  const COL = {
+    green: '1B5E3B', greenLight: 'E8F5E9', greenMid: '2E7D4E',
+    orange: 'E2502F', orangeLight: 'FFF3E0',
+    navy: '1B2A4A', navyLight: 'E3E8F0',
+    white: 'FFFFFF', black: '000000',
+    gray1: 'F5F5F5', gray2: 'E0E0E0', gray3: '9E9E9E',
+    red: 'C62828', redBg: 'FFEBEE'
+  };
+  const FONT = {
+    title:      { name:'Calibri', sz:16, bold:true, color:{rgb:COL.white} },
+    sectionH:   { name:'Calibri', sz:12, bold:true, color:{rgb:COL.white} },
+    colHeader:  { name:'Calibri', sz:10, bold:true, color:{rgb:COL.navy} },
+    total:      { name:'Calibri', sz:11, bold:true, color:{rgb:COL.green} },
+    subtotal:   { name:'Calibri', sz:11, bold:true, color:{rgb:COL.navy} },
+    pnlHead:    { name:'Calibri', sz:13, bold:true, color:{rgb:COL.white} },
+    pnlLabel:   { name:'Calibri', sz:11, color:{rgb:COL.black} },
+    pnlNeg:     { name:'Calibri', sz:11, color:{rgb:COL.red} },
+    pnlSub:     { name:'Calibri', sz:11, bold:true, color:{rgb:COL.green} },
+    pnlResult:  { name:'Calibri', sz:12, bold:true, color:{rgb:COL.white} },
+    pnlRatio:   { name:'Calibri', sz:10, bold:true, color:{rgb:COL.navy} },
+    dataCell:   { name:'Calibri', sz:10, color:{rgb:COL.black} },
+    hypLabel:   { name:'Calibri', sz:10, bold:true, color:{rgb:COL.navy} },
+    hypVal:     { name:'Calibri', sz:10, color:{rgb:COL.green} },
+    capex:      { name:'Calibri', sz:10, bold:true, color:{rgb:COL.orange} }
+  };
+  const BORDER_THIN = { style:'thin', color:{rgb:COL.gray2} };
+  const BORDER_MED  = { style:'medium', color:{rgb:COL.green} };
+  const BDR = { top:BORDER_THIN, bottom:BORDER_THIN, left:BORDER_THIN, right:BORDER_THIN };
+  const BDR_B = { top:BORDER_MED, bottom:BORDER_MED, left:BORDER_THIN, right:BORDER_THIN };
+  const FILL = (rgb) => ({ fgColor:{rgb} });
+  const ALIGN_L = { horizontal:'left', vertical:'center', wrapText:false };
+  const ALIGN_R = { horizontal:'right', vertical:'center' };
+  const ALIGN_C = { horizontal:'center', vertical:'center' };
+  const FMT_NUM = '#,##0';
+  const FMT_PCT = '0.0%';
+  const FMT_DEC = '#,##0.0';
+
+  // ── Style presets ──
+  const S_TITLE     = { font:FONT.title, fill:FILL(COL.green), alignment:{horizontal:'left',vertical:'center'}, border:BDR };
+  const S_SECTION   = { font:FONT.sectionH, fill:FILL(COL.navy), alignment:ALIGN_L, border:BDR };
+  const S_COLHDR    = { font:FONT.colHeader, fill:FILL(COL.navyLight), alignment:ALIGN_C, border:BDR };
+  const S_COLHDR_L  = { font:FONT.colHeader, fill:FILL(COL.navyLight), alignment:ALIGN_L, border:BDR };
+  const S_DATA      = { font:FONT.dataCell, alignment:ALIGN_L, border:BDR };
+  const S_DATA_N    = { font:FONT.dataCell, alignment:ALIGN_R, border:BDR, numFmt:FMT_NUM };
+  const S_DATA_ALT  = { font:FONT.dataCell, fill:FILL(COL.gray1), alignment:ALIGN_L, border:BDR };
+  const S_DATA_ALT_N= { font:FONT.dataCell, fill:FILL(COL.gray1), alignment:ALIGN_R, border:BDR, numFmt:FMT_NUM };
+  const S_TOTAL_L   = { font:FONT.total, fill:FILL(COL.greenLight), alignment:ALIGN_L, border:BDR_B };
+  const S_TOTAL_N   = { font:FONT.total, fill:FILL(COL.greenLight), alignment:ALIGN_R, border:BDR_B, numFmt:FMT_NUM };
+  const S_HYP_L     = { font:FONT.hypLabel, fill:FILL(COL.gray1), alignment:ALIGN_L, border:BDR };
+  const S_HYP_V     = { font:FONT.hypVal, fill:FILL(COL.gray1), alignment:ALIGN_R, border:BDR };
+  // P&L waterfall styles
+  const S_PNL_HEAD  = { font:FONT.pnlHead, fill:FILL(COL.green), alignment:ALIGN_L, border:BDR_B };
+  const S_PNL_HEAD_Y= { font:FONT.pnlHead, fill:FILL(COL.green), alignment:ALIGN_C, border:BDR_B };
+  const S_PNL_CA    = { font:FONT.subtotal, fill:FILL(COL.greenLight), alignment:ALIGN_L, border:BDR };
+  const S_PNL_CA_N  = { font:FONT.subtotal, fill:FILL(COL.greenLight), alignment:ALIGN_R, border:BDR, numFmt:FMT_NUM };
+  const S_PNL_NEG   = { font:FONT.pnlNeg, fill:FILL(COL.redBg), alignment:ALIGN_L, border:BDR };
+  const S_PNL_NEG_N = { font:FONT.pnlNeg, fill:FILL(COL.redBg), alignment:ALIGN_R, border:BDR, numFmt:FMT_NUM };
+  const S_PNL_SUB   = { font:FONT.pnlSub, fill:FILL(COL.greenLight), alignment:ALIGN_L, border:BDR_B };
+  const S_PNL_SUB_N = { font:FONT.pnlSub, fill:FILL(COL.greenLight), alignment:ALIGN_R, border:BDR_B, numFmt:FMT_NUM };
+  const S_PNL_RES   = { font:FONT.pnlResult, fill:FILL(COL.navy), alignment:ALIGN_L, border:BDR_B };
+  const S_PNL_RES_N = { font:FONT.pnlResult, fill:FILL(COL.navy), alignment:ALIGN_R, border:BDR_B, numFmt:FMT_NUM };
+  const S_RAT_L     = { font:FONT.pnlRatio, fill:FILL(COL.navyLight), alignment:ALIGN_L, border:BDR };
+  const S_RAT_N     = { font:FONT.pnlRatio, fill:FILL(COL.navyLight), alignment:ALIGN_R, border:BDR, numFmt:FMT_PCT };
+  const S_CAPEX_L   = { font:FONT.capex, fill:FILL(COL.orangeLight), alignment:ALIGN_L, border:BDR };
+  const S_CAPEX_N   = { font:FONT.capex, fill:FILL(COL.orangeLight), alignment:ALIGN_R, border:BDR, numFmt:FMT_NUM };
+
+  // ── Cell helper ──
+  function C(row, col) { return XLSX.utils.encode_cell({r:row, c:col}); }
+  function set(row, col, val, style, opts) {
+    const ref = C(row, col);
+    const cell = {};
+    if (opts && opts.f) { cell.f = opts.f; cell.t = 'n'; }
+    else { cell.v = val; cell.t = typeof val === 'number' ? 'n' : 's'; }
+    if (opts && opts.z) cell.z = opts.z;
+    else if (style && style.numFmt) cell.z = style.numFmt;
+    if (style) cell.s = style;
+    ws[ref] = cell;
+  }
+  function sumF(col, from, to) { const c = XLSX.utils.encode_col(col); return `SUM(${c}${from+1}:${c}${to+1})`; }
+
+  // ══════════════════════════════════════════════════
+  // TITRE
+  // ══════════════════════════════════════════════════
+  set(r, 0, `P&L  ${p.nom}  —  ${sc.nom}`, S_TITLE);
+  for (let c=1; c<=10; c++) set(r, c, '', S_TITLE); // extend title bar
+  ws['!merges'] = ws['!merges'] || [];
+  ws['!merges'].push({s:{r:0,c:0}, e:{r:0,c:10}});
+  r++;
+  // Sous-titre
+  const S_SUB = { font:{name:'Calibri',sz:10,italic:true,color:{rgb:COL.gray3}}, alignment:ALIGN_L };
+  set(r, 0, `Genere le ${new Date().toLocaleDateString('fr-FR')}  |  Devise : ${h.devise||'MAD'}  |  Methode Goose`, S_SUB);
+  r += 2;
+
+  // ══════════════════════════════════════════════════
+  // HYPOTHESES GENERALES
+  // ══════════════════════════════════════════════════
+  set(r, 0, 'HYPOTHESES GENERALES', S_SECTION);
+  for (let c=1; c<=3; c++) set(r, c, '', S_SECTION);
+  r++;
+  const hypStartRow = r;
+  set(r, 0, 'Annee de base', S_HYP_L); set(r, 1, y0, S_HYP_V); r++;
+  set(r, 0, 'Inflation annuelle (%)', S_HYP_L); set(r, 1, (h.inflation||0), S_HYP_V); r++;
+  set(r, 0, 'Charges sociales (%)', S_HYP_L); set(r, 1, (h.charges_sociales||0), S_HYP_V); r++;
+  set(r, 0, 'Taux change MAD/EUR', S_HYP_L); set(r, 1, h.tx_change||11, S_HYP_V); r++;
+  const inflRow = hypStartRow + 1;
+  const chgRow = hypStartRow + 2;
+  r++;
+
+  // ══════════════════════════════════════════════════
+  // SECTION 1 : PRODUITS (REVENUS)
+  // ══════════════════════════════════════════════════
+  set(r, 0, 'DETAIL REVENUS', S_SECTION);
+  for (let c=1; c<=10; c++) set(r, c, '', S_SECTION);
+  r++;
+  // Col headers
+  set(r, 0, 'Produit', S_COLHDR_L); set(r, 1, 'Canal', S_COLHDR);
+  set(r, 2, `Vol ${y0}`, S_COLHDR); set(r, 3, `Prix ${y0}`, S_COLHDR); set(r, 4, `CA ${y0}`, S_COLHDR);
+  set(r, 5, `Vol ${y0+1}`, S_COLHDR); set(r, 6, `Prix ${y0+1}`, S_COLHDR); set(r, 7, `CA ${y0+1}`, S_COLHDR);
+  set(r, 8, `Vol ${y0+2}`, S_COLHDR); set(r, 9, `Prix ${y0+2}`, S_COLHDR); set(r, 10, `CA ${y0+2}`, S_COLHDR);
+  r++;
+
+  const prodStartRow = r;
+  sc.produits.forEach((pr, i) => {
+    const alt = i % 2 === 1;
+    const sL = alt ? S_DATA_ALT : S_DATA;
+    const sN = alt ? S_DATA_ALT_N : S_DATA_N;
+    set(r, 0, pr.nom||'', sL);
+    set(r, 1, pr.canal||'', alt ? {...S_DATA_ALT, alignment:ALIGN_C} : {...S_DATA, alignment:ALIGN_C});
+    set(r, 2, pr.vol_n||0, sN); set(r, 3, pr.prix_n||0, sN);
+    set(r, 4, 0, sN, {f:`C${r+1}*D${r+1}`});
+    set(r, 5, pr.vol_n1||0, sN); set(r, 6, pr.prix_n1||0, sN);
+    set(r, 7, 0, sN, {f:`F${r+1}*G${r+1}`});
+    set(r, 8, pr.vol_n2||0, sN); set(r, 9, pr.prix_n2||0, sN);
+    set(r, 10, 0, sN, {f:`I${r+1}*J${r+1}`});
+    r++;
+  });
+  const prodEndRow = r - 1;
+
+  const totalCaRow = r;
+  set(r, 0, 'TOTAL CHIFFRE D\'AFFAIRES', S_TOTAL_L);
+  set(r, 1, '', S_TOTAL_L);
+  if (sc.produits.length > 0) {
+    set(r, 2, '', S_TOTAL_N); set(r, 3, '', S_TOTAL_N);
+    set(r, 1, 0, S_TOTAL_N, {f: sumF(4, prodStartRow, prodEndRow)});
+    set(r, 2, 0, S_TOTAL_N, {f: sumF(7, prodStartRow, prodEndRow)});
+    set(r, 3, 0, S_TOTAL_N, {f: sumF(10, prodStartRow, prodEndRow)});
+    set(r, 4, 0, S_TOTAL_N, {f: `B${r+1}`});
+    set(r, 7, 0, S_TOTAL_N, {f: `C${r+1}`});
+    set(r, 10, 0, S_TOTAL_N, {f: `D${r+1}`});
+  } else { set(r, 1, 0, S_TOTAL_N); set(r, 2, 0, S_TOTAL_N); set(r, 3, 0, S_TOTAL_N); }
+  r += 2;
+
+  // ══════════════════════════════════════════════════
+  // SECTION 2 : CHARGES VARIABLES
+  // ══════════════════════════════════════════════════
+  set(r, 0, 'CHARGES VARIABLES', S_SECTION);
+  for (let c=1; c<=4; c++) set(r, c, '', S_SECTION);
+  r++;
+  set(r, 0, 'Poste', S_COLHDR_L); set(r, 1, `${y0}`, S_COLHDR); set(r, 2, `${y0+1}`, S_COLHDR); set(r, 3, `${y0+2}`, S_COLHDR); set(r, 4, 'Mode', S_COLHDR);
+  r++;
+
+  const cvStartRow = r;
+  sc.chargesVar.forEach((c, i) => {
+    const alt = i % 2 === 1;
+    const sL = alt ? S_DATA_ALT : S_DATA;
+    const sN = alt ? S_DATA_ALT_N : S_DATA_N;
+    set(r, 0, c.nom||'', sL);
+    const modeLabel = c.mode === 'pct_ca' ? '% du CA' : (c.mode === 'par_unite' ? 'Par unite' : 'Montant fixe');
+    set(r, 4, modeLabel, alt ? {...S_DATA_ALT, alignment:ALIGN_C} : {...S_DATA, alignment:ALIGN_C});
+
+    if (c.mode === 'pct_ca') {
+      set(r, 1, 0, sN, {f: `B${totalCaRow+1}*${(c.val_n||0)/100}`});
+      set(r, 2, 0, sN, {f: `C${totalCaRow+1}*${(c.val_n1||0)/100}`});
+      set(r, 3, 0, sN, {f: `D${totalCaRow+1}*${(c.val_n2||0)/100}`});
+    } else if (c.mode === 'par_unite') {
+      const volCols = [{c:2},{c:5},{c:8}];
+      [0,1,2].forEach(idx => {
+        const vc = XLSX.utils.encode_col(volCols[idx].c);
+        set(r, 1+idx, 0, sN, {f: `SUM(${vc}${prodStartRow+1}:${vc}${prodEndRow+1})*${c['val_'+(idx===0?'n':idx===1?'n1':'n2')]||0}`});
+      });
+    } else {
+      set(r, 1, c.val_n||0, sN); set(r, 2, c.val_n1||0, sN); set(r, 3, c.val_n2||0, sN);
+    }
+    r++;
+  });
+  const cvEndRow = r - 1;
+
+  const totalCvRow = r;
+  set(r, 0, 'TOTAL CHARGES VARIABLES', S_TOTAL_L);
+  if (sc.chargesVar.length > 0) {
+    set(r, 1, 0, S_TOTAL_N, {f: sumF(1, cvStartRow, cvEndRow)});
+    set(r, 2, 0, S_TOTAL_N, {f: sumF(2, cvStartRow, cvEndRow)});
+    set(r, 3, 0, S_TOTAL_N, {f: sumF(3, cvStartRow, cvEndRow)});
+  } else { set(r, 1, 0, S_TOTAL_N); set(r, 2, 0, S_TOTAL_N); set(r, 3, 0, S_TOTAL_N); }
+  r += 2;
+
+  // ══════════════════════════════════════════════════
+  // SECTION 3 : MO DIRECTE
+  // ══════════════════════════════════════════════════
+  set(r, 0, 'MAIN D\'OEUVRE DIRECTE', S_SECTION);
+  for (let c=1; c<=7; c++) set(r, c, '', S_SECTION);
+  r++;
+  set(r, 0, 'Fonction', S_COLHDR_L);
+  set(r, 1, `FTE ${y0}`, S_COLHDR); set(r, 2, 'Sal. mensuel', S_COLHDR); set(r, 3, `Cout ${y0}`, S_COLHDR);
+  set(r, 4, `FTE ${y0+1}`, S_COLHDR); set(r, 5, `Cout ${y0+1}`, S_COLHDR);
+  set(r, 6, `FTE ${y0+2}`, S_COLHDR); set(r, 7, `Cout ${y0+2}`, S_COLHDR);
+  r++;
+
+  const modStartRow = r;
+  sc.moDirect.forEach((m, i) => {
+    const alt = i % 2 === 1;
+    const sL = alt ? S_DATA_ALT : S_DATA;
+    const sN = alt ? S_DATA_ALT_N : S_DATA_N;
+    set(r, 0, m.fonction||'', sL);
+    set(r, 1, m.fte_n||0, sN); set(r, 2, m.salaire_mensuel||0, sN);
+    set(r, 3, 0, sN, {f: `B${r+1}*C${r+1}*13*(1+$B$${chgRow+1}/100)`});
+    set(r, 4, m.fte_n1||0, sN);
+    set(r, 5, 0, sN, {f: `E${r+1}*C${r+1}*13*(1+$B$${chgRow+1}/100)*(1+$B$${inflRow+1}/100)`});
+    set(r, 6, m.fte_n2||0, sN);
+    set(r, 7, 0, sN, {f: `G${r+1}*C${r+1}*13*(1+$B$${chgRow+1}/100)*(1+$B$${inflRow+1}/100)^2`});
+    r++;
+  });
+  const modEndRow = r - 1;
+
+  const totalModRow = r;
+  set(r, 0, 'TOTAL MO DIRECTE', S_TOTAL_L);
+  if (sc.moDirect.length > 0) {
+    set(r, 1, 0, S_TOTAL_N, {f: sumF(3, modStartRow, modEndRow)});
+    set(r, 2, 0, S_TOTAL_N, {f: sumF(5, modStartRow, modEndRow)});
+    set(r, 3, 0, S_TOTAL_N, {f: sumF(7, modStartRow, modEndRow)});
+  } else { set(r, 1, 0, S_TOTAL_N); set(r, 2, 0, S_TOTAL_N); set(r, 3, 0, S_TOTAL_N); }
+  r += 2;
+
+  // ══════════════════════════════════════════════════
+  // SECTION 4 : MO SUPPORT
+  // ══════════════════════════════════════════════════
+  set(r, 0, 'MAIN D\'OEUVRE SUPPORT', S_SECTION);
+  for (let c=1; c<=7; c++) set(r, c, '', S_SECTION);
+  r++;
+  set(r, 0, 'Fonction', S_COLHDR_L);
+  set(r, 1, `FTE ${y0}`, S_COLHDR); set(r, 2, 'Sal. mensuel', S_COLHDR); set(r, 3, `Cout ${y0}`, S_COLHDR);
+  set(r, 4, `FTE ${y0+1}`, S_COLHDR); set(r, 5, `Cout ${y0+1}`, S_COLHDR);
+  set(r, 6, `FTE ${y0+2}`, S_COLHDR); set(r, 7, `Cout ${y0+2}`, S_COLHDR);
+  r++;
+
+  const mosStartRow = r;
+  sc.moSupport.forEach((m, i) => {
+    const alt = i % 2 === 1;
+    const sL = alt ? S_DATA_ALT : S_DATA;
+    const sN = alt ? S_DATA_ALT_N : S_DATA_N;
+    set(r, 0, m.fonction||'', sL);
+    set(r, 1, m.fte_n||0, sN); set(r, 2, m.salaire_mensuel||0, sN);
+    set(r, 3, 0, sN, {f: `B${r+1}*C${r+1}*13*(1+$B$${chgRow+1}/100)`});
+    set(r, 4, m.fte_n1||0, sN);
+    set(r, 5, 0, sN, {f: `E${r+1}*C${r+1}*13*(1+$B$${chgRow+1}/100)*(1+$B$${inflRow+1}/100)`});
+    set(r, 6, m.fte_n2||0, sN);
+    set(r, 7, 0, sN, {f: `G${r+1}*C${r+1}*13*(1+$B$${chgRow+1}/100)*(1+$B$${inflRow+1}/100)^2`});
+    r++;
+  });
+  const mosEndRow = r - 1;
+
+  const totalMosRow = r;
+  set(r, 0, 'TOTAL MO SUPPORT', S_TOTAL_L);
+  if (sc.moSupport.length > 0) {
+    set(r, 1, 0, S_TOTAL_N, {f: sumF(3, mosStartRow, mosEndRow)});
+    set(r, 2, 0, S_TOTAL_N, {f: sumF(5, mosStartRow, mosEndRow)});
+    set(r, 3, 0, S_TOTAL_N, {f: sumF(7, mosStartRow, mosEndRow)});
+  } else { set(r, 1, 0, S_TOTAL_N); set(r, 2, 0, S_TOTAL_N); set(r, 3, 0, S_TOTAL_N); }
+  r += 2;
+
+  // ══════════════════════════════════════════════════
+  // SECTION 5 : CHARGES FIXES DIRECTES
+  // ══════════════════════════════════════════════════
+  set(r, 0, 'CHARGES FIXES DIRECTES', S_SECTION);
+  for (let c=1; c<=4; c++) set(r, c, '', S_SECTION);
+  r++;
+  set(r, 0, 'Poste', S_COLHDR_L); set(r, 1, `${y0}`, S_COLHDR); set(r, 2, `${y0+1}`, S_COLHDR); set(r, 3, `${y0+2}`, S_COLHDR); set(r, 4, 'Categorie', S_COLHDR);
+  r++;
+
+  const cfdStartRow = r;
+  sc.chargesFixeDir.forEach((c, i) => {
+    const alt = i % 2 === 1;
+    const sL = alt ? S_DATA_ALT : S_DATA;
+    const sN = alt ? S_DATA_ALT_N : S_DATA_N;
+    set(r, 0, c.nom||'', sL);
+    set(r, 1, c.val_n||0, sN); set(r, 2, c.val_n1||0, sN); set(r, 3, c.val_n2||0, sN);
+    set(r, 4, c.categorie||'', alt ? {...S_DATA_ALT, alignment:ALIGN_C} : {...S_DATA, alignment:ALIGN_C});
+    r++;
+  });
+  const cfdEndRow = r - 1;
+
+  const totalCfdRow = r;
+  set(r, 0, 'TOTAL CHARGES FIXES DIRECTES', S_TOTAL_L);
+  if (sc.chargesFixeDir.length > 0) {
+    set(r, 1, 0, S_TOTAL_N, {f: sumF(1, cfdStartRow, cfdEndRow)});
+    set(r, 2, 0, S_TOTAL_N, {f: sumF(2, cfdStartRow, cfdEndRow)});
+    set(r, 3, 0, S_TOTAL_N, {f: sumF(3, cfdStartRow, cfdEndRow)});
+  } else { set(r, 1, 0, S_TOTAL_N); set(r, 2, 0, S_TOTAL_N); set(r, 3, 0, S_TOTAL_N); }
+  r += 2;
+
+  // ══════════════════════════════════════════════════
+  // SECTION 6 : CHARGES FIXES INDIRECTES
+  // ══════════════════════════════════════════════════
+  set(r, 0, 'CHARGES FIXES INDIRECTES', S_SECTION);
+  for (let c=1; c<=4; c++) set(r, c, '', S_SECTION);
+  r++;
+  set(r, 0, 'Poste', S_COLHDR_L); set(r, 1, `${y0}`, S_COLHDR); set(r, 2, `${y0+1}`, S_COLHDR); set(r, 3, `${y0+2}`, S_COLHDR); set(r, 4, 'Categorie', S_COLHDR);
+  r++;
+
+  const cfiStartRow = r;
+  sc.chargesFixeIndir.forEach((c, i) => {
+    const alt = i % 2 === 1;
+    const sL = alt ? S_DATA_ALT : S_DATA;
+    const sN = alt ? S_DATA_ALT_N : S_DATA_N;
+    set(r, 0, c.nom||'', sL);
+    set(r, 1, c.val_n||0, sN); set(r, 2, c.val_n1||0, sN); set(r, 3, c.val_n2||0, sN);
+    set(r, 4, c.categorie||'', alt ? {...S_DATA_ALT, alignment:ALIGN_C} : {...S_DATA, alignment:ALIGN_C});
+    r++;
+  });
+  const cfiEndRow = r - 1;
+
+  const totalCfiRow = r;
+  set(r, 0, 'TOTAL CHARGES FIXES INDIRECTES', S_TOTAL_L);
+  if (sc.chargesFixeIndir.length > 0) {
+    set(r, 1, 0, S_TOTAL_N, {f: sumF(1, cfiStartRow, cfiEndRow)});
+    set(r, 2, 0, S_TOTAL_N, {f: sumF(2, cfiStartRow, cfiEndRow)});
+    set(r, 3, 0, S_TOTAL_N, {f: sumF(3, cfiStartRow, cfiEndRow)});
+  } else { set(r, 1, 0, S_TOTAL_N); set(r, 2, 0, S_TOTAL_N); set(r, 3, 0, S_TOTAL_N); }
+  r += 2;
+
+  // ══════════════════════════════════════════════════
+  // SECTION 7 : CAPEX & AMORTISSEMENTS
+  // ══════════════════════════════════════════════════
+  const S_CAPEX_SEC = { font:FONT.sectionH, fill:FILL(COL.orange), alignment:ALIGN_L, border:BDR };
+  set(r, 0, 'CAPEX & AMORTISSEMENTS', S_CAPEX_SEC);
+  for (let c=1; c<=6; c++) set(r, c, '', S_CAPEX_SEC);
+  r++;
+  set(r, 0, 'Investissement', S_COLHDR_L); set(r, 1, 'Montant', S_COLHDR); set(r, 2, 'Duree amort.', S_COLHDR);
+  set(r, 3, 'Annee invest.', S_COLHDR); set(r, 4, `Amort ${y0}`, S_COLHDR); set(r, 5, `Amort ${y0+1}`, S_COLHDR); set(r, 6, `Amort ${y0+2}`, S_COLHDR);
+  r++;
+
+  const capexStartRow = r;
+  sc.capex.forEach((c, i) => {
+    const alt = i % 2 === 1;
+    const sL = alt ? S_DATA_ALT : S_DATA;
+    const sN = alt ? S_DATA_ALT_N : S_DATA_N;
+    set(r, 0, c.nom||'', sL);
+    set(r, 1, c.montant||0, sN);
+    set(r, 2, c.duree_amort||5, alt ? {...S_DATA_ALT, alignment:ALIGN_C} : {...S_DATA, alignment:ALIGN_C});
+    const anneeLabel = c.annee_invest === 'n1' ? `${y0+1}` : (c.annee_invest === 'n2' ? `${y0+2}` : `${y0}`);
+    set(r, 3, anneeLabel, alt ? {...S_DATA_ALT, alignment:ALIGN_C} : {...S_DATA, alignment:ALIGN_C});
+
+    const yInv = c.annee_invest === 'n1' ? 1 : (c.annee_invest === 'n2' ? 2 : 0);
+    set(r, 4, 0, sN, {f: yInv <= 0 ? `B${r+1}/C${r+1}` : '0'});
+    set(r, 5, 0, sN, {f: yInv <= 1 ? `B${r+1}/C${r+1}` : '0'});
+    set(r, 6, 0, sN, {f: yInv <= 2 ? `B${r+1}/C${r+1}` : '0'});
+    r++;
+  });
+  const capexEndRow = r - 1;
+
+  const totalCapexRow = r;
+  set(r, 0, 'TOTAL CAPEX / AMORT.', S_CAPEX_L);
+  if (sc.capex.length > 0) {
+    set(r, 1, 0, S_CAPEX_N, {f: sumF(1, capexStartRow, capexEndRow)});
+    set(r, 4, 0, S_CAPEX_N, {f: sumF(4, capexStartRow, capexEndRow)});
+    set(r, 5, 0, S_CAPEX_N, {f: sumF(5, capexStartRow, capexEndRow)});
+    set(r, 6, 0, S_CAPEX_N, {f: sumF(6, capexStartRow, capexEndRow)});
+  } else { set(r, 1, 0, S_CAPEX_N); set(r, 4, 0, S_CAPEX_N); set(r, 5, 0, S_CAPEX_N); set(r, 6, 0, S_CAPEX_N); }
+  r += 3;
+
+  // ══════════════════════════════════════════════════════════
+  // WATERFALL P&L — COMPTE DE RESULTAT
+  // ══════════════════════════════════════════════════════════
+  set(r, 0, 'COMPTE DE RESULTAT', S_PNL_HEAD);
+  set(r, 1, `${y0}`, S_PNL_HEAD_Y); set(r, 2, `${y0+1}`, S_PNL_HEAD_Y); set(r, 3, `${y0+2}`, S_PNL_HEAD_Y);
+  r++;
+
+  const tCA = totalCaRow + 1;
+  const tCV = totalCvRow + 1;
+  const tMOD = totalModRow + 1;
+  const tMOS = totalMosRow + 1;
+  const tCFD = totalCfdRow + 1;
+  const tCFI = totalCfiRow + 1;
+  const tAMN = totalCapexRow + 1;
+
+  // CA
+  const pnlCaRow = r;
+  set(r, 0, 'Chiffre d\'affaires', S_PNL_CA);
+  set(r, 1, 0, S_PNL_CA_N, {f: `B${tCA}`}); set(r, 2, 0, S_PNL_CA_N, {f: `C${tCA}`}); set(r, 3, 0, S_PNL_CA_N, {f: `D${tCA}`});
+  r++;
+
+  // (-) CV
+  const pnlCvRow = r;
+  set(r, 0, '  (-) Charges variables', S_PNL_NEG);
+  set(r, 1, 0, S_PNL_NEG_N, {f: `-B${tCV}`}); set(r, 2, 0, S_PNL_NEG_N, {f: `-C${tCV}`}); set(r, 3, 0, S_PNL_NEG_N, {f: `-D${tCV}`});
+  r++;
+
+  // = MCV
+  const pnlMcvRow = r;
+  set(r, 0, '= Marge sur couts variables (MCV)', S_PNL_SUB);
+  set(r, 1, 0, S_PNL_SUB_N, {f: `B${pnlCaRow+1}+B${pnlCvRow+1}`});
+  set(r, 2, 0, S_PNL_SUB_N, {f: `C${pnlCaRow+1}+C${pnlCvRow+1}`});
+  set(r, 3, 0, S_PNL_SUB_N, {f: `D${pnlCaRow+1}+D${pnlCvRow+1}`});
+  r++;
+
+  // (-) MO directe
+  const pnlModRow = r;
+  set(r, 0, '  (-) Main d\'oeuvre directe', S_PNL_NEG);
+  set(r, 1, 0, S_PNL_NEG_N, {f: `-B${tMOD}`}); set(r, 2, 0, S_PNL_NEG_N, {f: `-C${tMOD}`}); set(r, 3, 0, S_PNL_NEG_N, {f: `-D${tMOD}`});
+  r++;
+
+  // (-) Charges fixes directes
+  const pnlCfdRow = r;
+  set(r, 0, '  (-) Charges fixes directes', S_PNL_NEG);
+  set(r, 1, 0, S_PNL_NEG_N, {f: `-B${tCFD}`}); set(r, 2, 0, S_PNL_NEG_N, {f: `-C${tCFD}`}); set(r, 3, 0, S_PNL_NEG_N, {f: `-D${tCFD}`});
+  r++;
+
+  // = Marge brute
+  const pnlMbRow = r;
+  set(r, 0, '= Marge brute', S_PNL_SUB);
+  set(r, 1, 0, S_PNL_SUB_N, {f: `B${pnlMcvRow+1}+B${pnlModRow+1}+B${pnlCfdRow+1}`});
+  set(r, 2, 0, S_PNL_SUB_N, {f: `C${pnlMcvRow+1}+C${pnlModRow+1}+C${pnlCfdRow+1}`});
+  set(r, 3, 0, S_PNL_SUB_N, {f: `D${pnlMcvRow+1}+D${pnlModRow+1}+D${pnlCfdRow+1}`});
+  r++;
+
+  // (-) MO support
+  const pnlMosRow = r;
+  set(r, 0, '  (-) Main d\'oeuvre support', S_PNL_NEG);
+  set(r, 1, 0, S_PNL_NEG_N, {f: `-B${tMOS}`}); set(r, 2, 0, S_PNL_NEG_N, {f: `-C${tMOS}`}); set(r, 3, 0, S_PNL_NEG_N, {f: `-D${tMOS}`});
+  r++;
+
+  // (-) Charges fixes indirectes
+  const pnlCfiRow = r;
+  set(r, 0, '  (-) Charges fixes indirectes', S_PNL_NEG);
+  set(r, 1, 0, S_PNL_NEG_N, {f: `-B${tCFI}`}); set(r, 2, 0, S_PNL_NEG_N, {f: `-C${tCFI}`}); set(r, 3, 0, S_PNL_NEG_N, {f: `-D${tCFI}`});
+  r++;
+
+  // = EBITDA
+  const pnlEbitdaRow = r;
+  set(r, 0, '= EBITDA', S_PNL_SUB);
+  set(r, 1, 0, S_PNL_SUB_N, {f: `B${pnlMbRow+1}+B${pnlMosRow+1}+B${pnlCfiRow+1}`});
+  set(r, 2, 0, S_PNL_SUB_N, {f: `C${pnlMbRow+1}+C${pnlMosRow+1}+C${pnlCfiRow+1}`});
+  set(r, 3, 0, S_PNL_SUB_N, {f: `D${pnlMbRow+1}+D${pnlMosRow+1}+D${pnlCfiRow+1}`});
+  r++;
+
+  // (-) Amortissements
+  const pnlAmortRow = r;
+  set(r, 0, '  (-) Amortissements', S_PNL_NEG);
+  set(r, 1, 0, S_PNL_NEG_N, {f: `-E${tAMN}`}); set(r, 2, 0, S_PNL_NEG_N, {f: `-F${tAMN}`}); set(r, 3, 0, S_PNL_NEG_N, {f: `-G${tAMN}`});
+  r++;
+
+  // = REX
+  const pnlRexRow = r;
+  set(r, 0, '= RESULTAT D\'EXPLOITATION (REX)', S_PNL_RES);
+  set(r, 1, 0, S_PNL_RES_N, {f: `B${pnlEbitdaRow+1}+B${pnlAmortRow+1}`});
+  set(r, 2, 0, S_PNL_RES_N, {f: `C${pnlEbitdaRow+1}+C${pnlAmortRow+1}`});
+  set(r, 3, 0, S_PNL_RES_N, {f: `D${pnlEbitdaRow+1}+D${pnlAmortRow+1}`});
+  r += 2;
+
+  // ── Ratios (%) ──
+  set(r, 0, 'RATIOS', S_PNL_HEAD); set(r, 1, `${y0}`, S_PNL_HEAD_Y); set(r, 2, `${y0+1}`, S_PNL_HEAD_Y); set(r, 3, `${y0+2}`, S_PNL_HEAD_Y);
+  r++;
+
+  const ratios = [
+    ['% Charges variables / CA', tCV, tCV, tCV, 'B','C','D'],
+    ['% MCV / CA', pnlMcvRow+1, pnlMcvRow+1, pnlMcvRow+1, 'B','C','D'],
+    ['% Marge brute / CA', pnlMbRow+1, pnlMbRow+1, pnlMbRow+1, 'B','C','D'],
+    ['% EBITDA / CA', pnlEbitdaRow+1, pnlEbitdaRow+1, pnlEbitdaRow+1, 'B','C','D'],
+    ['% REX / CA', pnlRexRow+1, pnlRexRow+1, pnlRexRow+1, 'B','C','D']
+  ];
+  ratios.forEach(([label, rN, rN1, rN2]) => {
+    set(r, 0, label, S_RAT_L);
+    set(r, 1, 0, S_RAT_N, {f: `IF(B${pnlCaRow+1}=0,0,B${rN}/B${pnlCaRow+1})`});
+    set(r, 2, 0, S_RAT_N, {f: `IF(C${pnlCaRow+1}=0,0,C${rN1}/C${pnlCaRow+1})`});
+    set(r, 3, 0, S_RAT_N, {f: `IF(D${pnlCaRow+1}=0,0,D${rN2}/D${pnlCaRow+1})`});
+    r++;
+  });
+  r++;
+
+  // ── CAPEX + Payback ──
+  set(r, 0, 'CAPEX total investi', S_CAPEX_L);
+  set(r, 1, 0, S_CAPEX_N, {f: `B${totalCapexRow+1}`});
+  r++;
+
+  set(r, 0, 'EBITDA moyen 3 ans', S_CAPEX_L);
+  set(r, 1, 0, S_CAPEX_N, {f: `(B${pnlEbitdaRow+1}+C${pnlEbitdaRow+1}+D${pnlEbitdaRow+1})/3`});
+  const ebitdaMoyRow = r;
+  r++;
+
+  set(r, 0, 'Payback (ans)', S_CAPEX_L);
+  set(r, 1, 0, {...S_CAPEX_N, numFmt:FMT_DEC}, {f: `IF(B${ebitdaMoyRow+1}<=0,"N/A",B${ebitdaMoyRow}/B${ebitdaMoyRow+1})`});
+  r++;
+
+  // ── Sheet config ──
+  ws['!ref'] = `A1:K${r+1}`;
+  ws['!cols'] = [
+    {wch:38},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:14},{wch:14},{wch:14}
+  ];
+  // Freeze first row
+  ws['!freeze'] = {xSplit:0, ySplit:1};
+  // Row heights for title
+  ws['!rows'] = [{hpt:32}];
+
+  return ws;
+}
+
+// Export P&L du projet courant (tous scénarios)
+function exportPnLExcel() {
+  if (typeof XLSX === 'undefined') { alert('Librairie XLSX non chargee. Rechargez la page.'); return; }
+  const p = curProj(); if (!p) return;
+  const wb = XLSX.utils.book_new();
+
+  (p.simulateur.scenarios||[]).forEach(sc => {
+    const ws = buildPnLSheet(p, sc);
+    let name = sc.nom.substring(0, 31).replace(/[\\\/\*\?\[\]:]/g, '-');
+    XLSX.utils.book_append_sheet(wb, ws, name);
+  });
+
+  XLSX.writeFile(wb, `pnl-${slug(p.nom)}-${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast('P&L Excel avec formules telecharge');
+}
+
+// Export P&L de TOUS les projets (portfolio)
+function exportAllPnLExcel() {
+  if (typeof XLSX === 'undefined') { alert('Librairie XLSX non chargee. Rechargez la page.'); return; }
+  const wb = XLSX.utils.book_new();
+  const usedNames = {};
+
+  STATE.projets.forEach(p => {
+    if (!p.simulateur || !p.simulateur.scenarios) return;
+    p.simulateur.scenarios.forEach(sc => {
+      const ws = buildPnLSheet(p, sc);
+      const pName = p.nom.substring(0, 15).replace(/[\\\/\*\?\[\]:]/g, '-');
+      const sName = sc.nom.substring(0, 12).replace(/[\\\/\*\?\[\]:]/g, '-');
+      let name = `${pName} - ${sName}`.substring(0, 31);
+      // Avoid duplicate sheet names
+      if (usedNames[name]) { name = name.substring(0, 28) + usedNames[name]++; }
+      else { usedNames[name] = 1; }
+      XLSX.utils.book_append_sheet(wb, ws, name);
+    });
+  });
+
+  XLSX.writeFile(wb, `pnl-portfolio-mabya-${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast('P&L Portfolio Excel avec formules telecharge');
 }
 
 // ─── 2. EXPORT EXCEL multi-onglets ────────────────────
