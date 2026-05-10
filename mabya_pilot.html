@@ -5129,6 +5129,44 @@ const PNL_DISTRIB_SLM_V1 = {
   ]
 };
 
+// ═══════════════════════════════════════════════════════════════════
+// MIGRATION RATIOS P&L PREZ — Distribution V2
+// Recalibre les charges variables des 3 scénarios pour atteindre les
+// ratios cibles de la PREZ AVANT PRJT (mix 60% Distribution × 25 % MB
+// + 40 % Production × 60 % MB → MB consolidée 39 %).
+// Cibles : MB 39 % · Logistics 6 % · Production cost 10 % · Commercial
+// 6 % · Admin+Other 4 % · OPEX 25 % · EBITDA 14 % · Net 10 %.
+//
+// Approche : charges variables = 61 % du CA en mode pct_ca.
+// Coût d'achat 55 % + Logistique 4 % + Pertes 2 %.
+// ═══════════════════════════════════════════════════════════════════
+const DISTRIB_RATIOS_PREZ_V1 = {
+  chargesVar: [
+    { nom: 'Coût d\'achat produits',     categorie: 'COGS',       mode: 'pct_ca', val_n: 55,  val_n1: 55,  val_n2: 55 },
+    { nom: 'Logistique variable',        categorie: 'Logistique', mode: 'pct_ca', val_n: 4,   val_n1: 4,   val_n2: 4 },
+    { nom: 'Pertes / DLC',               categorie: 'Pertes',     mode: 'pct_ca', val_n: 2,   val_n1: 2,   val_n2: 2 }
+  ]
+};
+
+if (!STATE.migrations.distribPnLRatiosV2) {
+  const distrib = STATE.projets.find(p => p.id === 'distribution');
+  if (distrib && distrib.simulateur && distrib.simulateur.scenarios) {
+    distrib.simulateur.scenarios.forEach(sc => {
+      // Recalibrer uniquement les charges variables pour atteindre MB 39 %
+      sc.chargesVar = DISTRIB_RATIOS_PREZ_V1.chargesVar.map(x => ({ id: lid(), ...x }));
+    });
+    // Marquer dans les descriptions
+    const baseScen = distrib.simulateur.scenarios.find(s => s.id === 'base');
+    if (baseScen) baseScen.description = 'Cadrage P&L officiel — Hypothèses CA 2027/2028/2029. Charges variables recalibrées sur ratios PREZ : MB 39 % (mix 60 % Distribution × 25 % + 40 % Production × 60 %). Cible EBITDA 14 %.';
+    const slmScen = distrib.simulateur.scenarios.find(s => s.id === 'slm');
+    if (slmScen) slmScen.description = 'Trajectoire CA 30 / 60 / 100 Mdhs. Mix 20 références (premium + pain export 1,8 dhs/pc + gamme japonaise complète). Charges variables recalibrées PREZ : MB 39 %. Cible EBITDA 14 %. Géo Casa / Rabat / Marrakech, 100+ clients année 1.';
+    const agScen = distrib.simulateur.scenarios.find(s => s.id === 'agressif');
+    if (agScen) agScen.description = 'CA cible 30 Mdhs en 2029. 2 nouveaux produits (Pain Dorelys + Bagels). Charges variables recalibrées PREZ : MB 39 %. Cible EBITDA 14 %.';
+  }
+  STATE.migrations.distribPnLRatiosV2 = true;
+  try { Storage.save(STATE); } catch(e) {}
+}
+
 if (!STATE.migrations.distribPnLSLMV1) {
   const distrib = STATE.projets.find(p => p.id === 'distribution');
   if (distrib && distrib.simulateur) {
