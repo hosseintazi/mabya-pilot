@@ -7824,6 +7824,9 @@ function buildPnLSheet(p, sc) {
   const h = p.simulateur.hypGen;
   const y0 = h.annee_base;
   let r = 0;
+  // Pre-calc tous les agregats P&L pour pre-remplir les cellules formules
+  // (sinon les lecteurs qui ne recalculent pas a l'ouverture affichent du vide)
+  const calc = (typeof calcPnL === 'function') ? calcPnL(p, sc) : null;
 
   // ══════════════════════════════════════════════════
   // PALETTE & STYLES
@@ -7899,7 +7902,12 @@ function buildPnLSheet(p, sc) {
   function set(row, col, val, style, opts) {
     const ref = C(row, col);
     const cell = {};
-    if (opts && opts.f) { cell.f = opts.f; cell.t = 'n'; }
+    if (opts && opts.f) {
+      cell.f = opts.f;
+      cell.t = 'n';
+      // Pre-fill computed value so readers without calc engine show data immediately
+      cell.v = (typeof val === 'number' && !isNaN(val)) ? val : 0;
+    }
     else { cell.v = val; cell.t = typeof val === 'number' ? 'n' : 's'; }
     if (opts && opts.z) cell.z = opts.z;
     else if (style && style.numFmt) cell.z = style.numFmt;
@@ -7954,29 +7962,36 @@ function buildPnLSheet(p, sc) {
     const alt = i % 2 === 1;
     const sL = alt ? S_DATA_ALT : S_DATA;
     const sN = alt ? S_DATA_ALT_N : S_DATA_N;
+    const ca_n  = (pr.vol_n ||0) * (pr.prix_n ||0);
+    const ca_n1 = (pr.vol_n1||0) * (pr.prix_n1||0);
+    const ca_n2 = (pr.vol_n2||0) * (pr.prix_n2||0);
     set(r, 0, pr.nom||'', sL);
     set(r, 1, pr.canal||'', alt ? {...S_DATA_ALT, alignment:ALIGN_C} : {...S_DATA, alignment:ALIGN_C});
     set(r, 2, pr.vol_n||0, sN); set(r, 3, pr.prix_n||0, sN);
-    set(r, 4, 0, sN, {f:`C${r+1}*D${r+1}`});
+    set(r, 4, ca_n, sN, {f:`C${r+1}*D${r+1}`});
     set(r, 5, pr.vol_n1||0, sN); set(r, 6, pr.prix_n1||0, sN);
-    set(r, 7, 0, sN, {f:`F${r+1}*G${r+1}`});
+    set(r, 7, ca_n1, sN, {f:`F${r+1}*G${r+1}`});
     set(r, 8, pr.vol_n2||0, sN); set(r, 9, pr.prix_n2||0, sN);
-    set(r, 10, 0, sN, {f:`I${r+1}*J${r+1}`});
+    set(r, 10, ca_n2, sN, {f:`I${r+1}*J${r+1}`});
     r++;
   });
   const prodEndRow = r - 1;
+
+  const ca_n_tot  = calc ? calc.n.ca  : sc.produits.reduce((s,pr)=>s+(pr.vol_n ||0)*(pr.prix_n ||0),0);
+  const ca_n1_tot = calc ? calc.n1.ca : sc.produits.reduce((s,pr)=>s+(pr.vol_n1||0)*(pr.prix_n1||0),0);
+  const ca_n2_tot = calc ? calc.n2.ca : sc.produits.reduce((s,pr)=>s+(pr.vol_n2||0)*(pr.prix_n2||0),0);
 
   const totalCaRow = r;
   set(r, 0, 'TOTAL CHIFFRE D\'AFFAIRES', S_TOTAL_L);
   set(r, 1, '', S_TOTAL_L);
   if (sc.produits.length > 0) {
     set(r, 2, '', S_TOTAL_N); set(r, 3, '', S_TOTAL_N);
-    set(r, 1, 0, S_TOTAL_N, {f: sumF(4, prodStartRow, prodEndRow)});
-    set(r, 2, 0, S_TOTAL_N, {f: sumF(7, prodStartRow, prodEndRow)});
-    set(r, 3, 0, S_TOTAL_N, {f: sumF(10, prodStartRow, prodEndRow)});
-    set(r, 4, 0, S_TOTAL_N, {f: `B${r+1}`});
-    set(r, 7, 0, S_TOTAL_N, {f: `C${r+1}`});
-    set(r, 10, 0, S_TOTAL_N, {f: `D${r+1}`});
+    set(r, 1, ca_n_tot,  S_TOTAL_N, {f: sumF(4, prodStartRow, prodEndRow)});
+    set(r, 2, ca_n1_tot, S_TOTAL_N, {f: sumF(7, prodStartRow, prodEndRow)});
+    set(r, 3, ca_n2_tot, S_TOTAL_N, {f: sumF(10, prodStartRow, prodEndRow)});
+    set(r, 4, ca_n_tot,  S_TOTAL_N, {f: `B${r+1}`});
+    set(r, 7, ca_n1_tot, S_TOTAL_N, {f: `C${r+1}`});
+    set(r, 10, ca_n2_tot, S_TOTAL_N, {f: `D${r+1}`});
   } else { set(r, 1, 0, S_TOTAL_N); set(r, 2, 0, S_TOTAL_N); set(r, 3, 0, S_TOTAL_N); }
   r += 2;
 
@@ -7990,6 +8005,10 @@ function buildPnLSheet(p, sc) {
   r++;
 
   const cvStartRow = r;
+  // Pre-calc volume totaux pour mode par_unite
+  const totalVol_n  = sc.produits.reduce((s,pr)=>s+(pr.vol_n ||0),0);
+  const totalVol_n1 = sc.produits.reduce((s,pr)=>s+(pr.vol_n1||0),0);
+  const totalVol_n2 = sc.produits.reduce((s,pr)=>s+(pr.vol_n2||0),0);
   sc.chargesVar.forEach((c, i) => {
     const alt = i % 2 === 1;
     const sL = alt ? S_DATA_ALT : S_DATA;
@@ -7999,14 +8018,20 @@ function buildPnLSheet(p, sc) {
     set(r, 4, modeLabel, alt ? {...S_DATA_ALT, alignment:ALIGN_C} : {...S_DATA, alignment:ALIGN_C});
 
     if (c.mode === 'pct_ca') {
-      set(r, 1, 0, sN, {f: `B${totalCaRow+1}*${(c.val_n||0)/100}`});
-      set(r, 2, 0, sN, {f: `C${totalCaRow+1}*${(c.val_n1||0)/100}`});
-      set(r, 3, 0, sN, {f: `D${totalCaRow+1}*${(c.val_n2||0)/100}`});
+      const v_n  = ca_n_tot  * (c.val_n ||0)/100;
+      const v_n1 = ca_n1_tot * (c.val_n1||0)/100;
+      const v_n2 = ca_n2_tot * (c.val_n2||0)/100;
+      set(r, 1, v_n,  sN, {f: `B${totalCaRow+1}*${(c.val_n||0)/100}`});
+      set(r, 2, v_n1, sN, {f: `C${totalCaRow+1}*${(c.val_n1||0)/100}`});
+      set(r, 3, v_n2, sN, {f: `D${totalCaRow+1}*${(c.val_n2||0)/100}`});
     } else if (c.mode === 'par_unite') {
       const volCols = [{c:2},{c:5},{c:8}];
+      const totVols = [totalVol_n, totalVol_n1, totalVol_n2];
       [0,1,2].forEach(idx => {
         const vc = XLSX.utils.encode_col(volCols[idx].c);
-        set(r, 1+idx, 0, sN, {f: `SUM(${vc}${prodStartRow+1}:${vc}${prodEndRow+1})*${c['val_'+(idx===0?'n':idx===1?'n1':'n2')]||0}`});
+        const valKey = idx===0?'n':idx===1?'n1':'n2';
+        const v = totVols[idx] * (c['val_'+valKey]||0);
+        set(r, 1+idx, v, sN, {f: `SUM(${vc}${prodStartRow+1}:${vc}${prodEndRow+1})*${c['val_'+valKey]||0}`});
       });
     } else {
       set(r, 1, c.val_n||0, sN); set(r, 2, c.val_n1||0, sN); set(r, 3, c.val_n2||0, sN);
@@ -8015,12 +8040,16 @@ function buildPnLSheet(p, sc) {
   });
   const cvEndRow = r - 1;
 
+  const cv_n_tot  = calc ? calc.n.cv  : 0;
+  const cv_n1_tot = calc ? calc.n1.cv : 0;
+  const cv_n2_tot = calc ? calc.n2.cv : 0;
+
   const totalCvRow = r;
   set(r, 0, 'TOTAL CHARGES VARIABLES', S_TOTAL_L);
   if (sc.chargesVar.length > 0) {
-    set(r, 1, 0, S_TOTAL_N, {f: sumF(1, cvStartRow, cvEndRow)});
-    set(r, 2, 0, S_TOTAL_N, {f: sumF(2, cvStartRow, cvEndRow)});
-    set(r, 3, 0, S_TOTAL_N, {f: sumF(3, cvStartRow, cvEndRow)});
+    set(r, 1, cv_n_tot,  S_TOTAL_N, {f: sumF(1, cvStartRow, cvEndRow)});
+    set(r, 2, cv_n1_tot, S_TOTAL_N, {f: sumF(2, cvStartRow, cvEndRow)});
+    set(r, 3, cv_n2_tot, S_TOTAL_N, {f: sumF(3, cvStartRow, cvEndRow)});
   } else { set(r, 1, 0, S_TOTAL_N); set(r, 2, 0, S_TOTAL_N); set(r, 3, 0, S_TOTAL_N); }
   r += 2;
 
@@ -8037,27 +8066,37 @@ function buildPnLSheet(p, sc) {
   r++;
 
   const modStartRow = r;
+  const chg = 1 + (h.charges_sociales||0)/100;
+  const infl = (idx) => Math.pow(1 + (h.inflation||0)/100, idx);
   sc.moDirect.forEach((m, i) => {
     const alt = i % 2 === 1;
     const sL = alt ? S_DATA_ALT : S_DATA;
     const sN = alt ? S_DATA_ALT_N : S_DATA_N;
+    const sal = m.salaire_mensuel||0;
+    const cn  = (m.fte_n ||0) * sal * 13 * chg;
+    const cn1 = (m.fte_n1||0) * sal * 13 * chg * infl(1);
+    const cn2 = (m.fte_n2||0) * sal * 13 * chg * infl(2);
     set(r, 0, m.fonction||'', sL);
-    set(r, 1, m.fte_n||0, sN); set(r, 2, m.salaire_mensuel||0, sN);
-    set(r, 3, 0, sN, {f: `B${r+1}*C${r+1}*13*(1+$B$${chgRow+1}/100)`});
+    set(r, 1, m.fte_n||0, sN); set(r, 2, sal, sN);
+    set(r, 3, cn, sN, {f: `B${r+1}*C${r+1}*13*(1+$B$${chgRow+1}/100)`});
     set(r, 4, m.fte_n1||0, sN);
-    set(r, 5, 0, sN, {f: `E${r+1}*C${r+1}*13*(1+$B$${chgRow+1}/100)*(1+$B$${inflRow+1}/100)`});
+    set(r, 5, cn1, sN, {f: `E${r+1}*C${r+1}*13*(1+$B$${chgRow+1}/100)*(1+$B$${inflRow+1}/100)`});
     set(r, 6, m.fte_n2||0, sN);
-    set(r, 7, 0, sN, {f: `G${r+1}*C${r+1}*13*(1+$B$${chgRow+1}/100)*(1+$B$${inflRow+1}/100)^2`});
+    set(r, 7, cn2, sN, {f: `G${r+1}*C${r+1}*13*(1+$B$${chgRow+1}/100)*(1+$B$${inflRow+1}/100)^2`});
     r++;
   });
   const modEndRow = r - 1;
 
+  const mod_n  = calc ? calc.n.moDirect  : 0;
+  const mod_n1 = calc ? calc.n1.moDirect : 0;
+  const mod_n2 = calc ? calc.n2.moDirect : 0;
+
   const totalModRow = r;
   set(r, 0, 'TOTAL MO DIRECTE', S_TOTAL_L);
   if (sc.moDirect.length > 0) {
-    set(r, 1, 0, S_TOTAL_N, {f: sumF(3, modStartRow, modEndRow)});
-    set(r, 2, 0, S_TOTAL_N, {f: sumF(5, modStartRow, modEndRow)});
-    set(r, 3, 0, S_TOTAL_N, {f: sumF(7, modStartRow, modEndRow)});
+    set(r, 1, mod_n,  S_TOTAL_N, {f: sumF(3, modStartRow, modEndRow)});
+    set(r, 2, mod_n1, S_TOTAL_N, {f: sumF(5, modStartRow, modEndRow)});
+    set(r, 3, mod_n2, S_TOTAL_N, {f: sumF(7, modStartRow, modEndRow)});
   } else { set(r, 1, 0, S_TOTAL_N); set(r, 2, 0, S_TOTAL_N); set(r, 3, 0, S_TOTAL_N); }
   r += 2;
 
@@ -8078,23 +8117,31 @@ function buildPnLSheet(p, sc) {
     const alt = i % 2 === 1;
     const sL = alt ? S_DATA_ALT : S_DATA;
     const sN = alt ? S_DATA_ALT_N : S_DATA_N;
+    const sal = m.salaire_mensuel||0;
+    const cn  = (m.fte_n ||0) * sal * 13 * chg;
+    const cn1 = (m.fte_n1||0) * sal * 13 * chg * infl(1);
+    const cn2 = (m.fte_n2||0) * sal * 13 * chg * infl(2);
     set(r, 0, m.fonction||'', sL);
-    set(r, 1, m.fte_n||0, sN); set(r, 2, m.salaire_mensuel||0, sN);
-    set(r, 3, 0, sN, {f: `B${r+1}*C${r+1}*13*(1+$B$${chgRow+1}/100)`});
+    set(r, 1, m.fte_n||0, sN); set(r, 2, sal, sN);
+    set(r, 3, cn, sN, {f: `B${r+1}*C${r+1}*13*(1+$B$${chgRow+1}/100)`});
     set(r, 4, m.fte_n1||0, sN);
-    set(r, 5, 0, sN, {f: `E${r+1}*C${r+1}*13*(1+$B$${chgRow+1}/100)*(1+$B$${inflRow+1}/100)`});
+    set(r, 5, cn1, sN, {f: `E${r+1}*C${r+1}*13*(1+$B$${chgRow+1}/100)*(1+$B$${inflRow+1}/100)`});
     set(r, 6, m.fte_n2||0, sN);
-    set(r, 7, 0, sN, {f: `G${r+1}*C${r+1}*13*(1+$B$${chgRow+1}/100)*(1+$B$${inflRow+1}/100)^2`});
+    set(r, 7, cn2, sN, {f: `G${r+1}*C${r+1}*13*(1+$B$${chgRow+1}/100)*(1+$B$${inflRow+1}/100)^2`});
     r++;
   });
   const mosEndRow = r - 1;
 
+  const mos_n  = calc ? calc.n.moSupport  : 0;
+  const mos_n1 = calc ? calc.n1.moSupport : 0;
+  const mos_n2 = calc ? calc.n2.moSupport : 0;
+
   const totalMosRow = r;
   set(r, 0, 'TOTAL MO SUPPORT', S_TOTAL_L);
   if (sc.moSupport.length > 0) {
-    set(r, 1, 0, S_TOTAL_N, {f: sumF(3, mosStartRow, mosEndRow)});
-    set(r, 2, 0, S_TOTAL_N, {f: sumF(5, mosStartRow, mosEndRow)});
-    set(r, 3, 0, S_TOTAL_N, {f: sumF(7, mosStartRow, mosEndRow)});
+    set(r, 1, mos_n,  S_TOTAL_N, {f: sumF(3, mosStartRow, mosEndRow)});
+    set(r, 2, mos_n1, S_TOTAL_N, {f: sumF(5, mosStartRow, mosEndRow)});
+    set(r, 3, mos_n2, S_TOTAL_N, {f: sumF(7, mosStartRow, mosEndRow)});
   } else { set(r, 1, 0, S_TOTAL_N); set(r, 2, 0, S_TOTAL_N); set(r, 3, 0, S_TOTAL_N); }
   r += 2;
 
@@ -8119,12 +8166,15 @@ function buildPnLSheet(p, sc) {
   });
   const cfdEndRow = r - 1;
 
+  const cfd_n  = calc ? calc.n.cfd  : sc.chargesFixeDir.reduce((s,c)=>s+(c.val_n ||0),0);
+  const cfd_n1 = calc ? calc.n1.cfd : sc.chargesFixeDir.reduce((s,c)=>s+(c.val_n1||0),0);
+  const cfd_n2 = calc ? calc.n2.cfd : sc.chargesFixeDir.reduce((s,c)=>s+(c.val_n2||0),0);
   const totalCfdRow = r;
   set(r, 0, 'TOTAL CHARGES FIXES DIRECTES', S_TOTAL_L);
   if (sc.chargesFixeDir.length > 0) {
-    set(r, 1, 0, S_TOTAL_N, {f: sumF(1, cfdStartRow, cfdEndRow)});
-    set(r, 2, 0, S_TOTAL_N, {f: sumF(2, cfdStartRow, cfdEndRow)});
-    set(r, 3, 0, S_TOTAL_N, {f: sumF(3, cfdStartRow, cfdEndRow)});
+    set(r, 1, cfd_n,  S_TOTAL_N, {f: sumF(1, cfdStartRow, cfdEndRow)});
+    set(r, 2, cfd_n1, S_TOTAL_N, {f: sumF(2, cfdStartRow, cfdEndRow)});
+    set(r, 3, cfd_n2, S_TOTAL_N, {f: sumF(3, cfdStartRow, cfdEndRow)});
   } else { set(r, 1, 0, S_TOTAL_N); set(r, 2, 0, S_TOTAL_N); set(r, 3, 0, S_TOTAL_N); }
   r += 2;
 
@@ -8149,12 +8199,15 @@ function buildPnLSheet(p, sc) {
   });
   const cfiEndRow = r - 1;
 
+  const cfi_n  = calc ? calc.n.cfi  : sc.chargesFixeIndir.reduce((s,c)=>s+(c.val_n ||0),0);
+  const cfi_n1 = calc ? calc.n1.cfi : sc.chargesFixeIndir.reduce((s,c)=>s+(c.val_n1||0),0);
+  const cfi_n2 = calc ? calc.n2.cfi : sc.chargesFixeIndir.reduce((s,c)=>s+(c.val_n2||0),0);
   const totalCfiRow = r;
   set(r, 0, 'TOTAL CHARGES FIXES INDIRECTES', S_TOTAL_L);
   if (sc.chargesFixeIndir.length > 0) {
-    set(r, 1, 0, S_TOTAL_N, {f: sumF(1, cfiStartRow, cfiEndRow)});
-    set(r, 2, 0, S_TOTAL_N, {f: sumF(2, cfiStartRow, cfiEndRow)});
-    set(r, 3, 0, S_TOTAL_N, {f: sumF(3, cfiStartRow, cfiEndRow)});
+    set(r, 1, cfi_n,  S_TOTAL_N, {f: sumF(1, cfiStartRow, cfiEndRow)});
+    set(r, 2, cfi_n1, S_TOTAL_N, {f: sumF(2, cfiStartRow, cfiEndRow)});
+    set(r, 3, cfi_n2, S_TOTAL_N, {f: sumF(3, cfiStartRow, cfiEndRow)});
   } else { set(r, 1, 0, S_TOTAL_N); set(r, 2, 0, S_TOTAL_N); set(r, 3, 0, S_TOTAL_N); }
   r += 2;
 
@@ -8181,20 +8234,30 @@ function buildPnLSheet(p, sc) {
     set(r, 3, anneeLabel, alt ? {...S_DATA_ALT, alignment:ALIGN_C} : {...S_DATA, alignment:ALIGN_C});
 
     const yInv = c.annee_invest === 'n1' ? 1 : (c.annee_invest === 'n2' ? 2 : 0);
-    set(r, 4, 0, sN, {f: yInv <= 0 ? `B${r+1}/C${r+1}` : '0'});
-    set(r, 5, 0, sN, {f: yInv <= 1 ? `B${r+1}/C${r+1}` : '0'});
-    set(r, 6, 0, sN, {f: yInv <= 2 ? `B${r+1}/C${r+1}` : '0'});
+    const dur = c.duree_amort || 5;
+    const annu = (c.montant||0) > 0 && dur > 0 ? (c.montant||0)/dur : 0;
+    const a_n  = yInv <= 0 ? annu : 0;
+    const a_n1 = yInv <= 1 ? annu : 0;
+    const a_n2 = yInv <= 2 ? annu : 0;
+    set(r, 4, a_n,  sN, {f: yInv <= 0 ? `B${r+1}/C${r+1}` : '0'});
+    set(r, 5, a_n1, sN, {f: yInv <= 1 ? `B${r+1}/C${r+1}` : '0'});
+    set(r, 6, a_n2, sN, {f: yInv <= 2 ? `B${r+1}/C${r+1}` : '0'});
     r++;
   });
   const capexEndRow = r - 1;
 
+  const capex_tot = calc ? calc.capexTotal : sc.capex.reduce((s,c)=>s+(c.montant||0),0);
+  const amort_n  = calc ? calc.n.amort  : 0;
+  const amort_n1 = calc ? calc.n1.amort : 0;
+  const amort_n2 = calc ? calc.n2.amort : 0;
+
   const totalCapexRow = r;
   set(r, 0, 'TOTAL CAPEX / AMORT.', S_CAPEX_L);
   if (sc.capex.length > 0) {
-    set(r, 1, 0, S_CAPEX_N, {f: sumF(1, capexStartRow, capexEndRow)});
-    set(r, 4, 0, S_CAPEX_N, {f: sumF(4, capexStartRow, capexEndRow)});
-    set(r, 5, 0, S_CAPEX_N, {f: sumF(5, capexStartRow, capexEndRow)});
-    set(r, 6, 0, S_CAPEX_N, {f: sumF(6, capexStartRow, capexEndRow)});
+    set(r, 1, capex_tot, S_CAPEX_N, {f: sumF(1, capexStartRow, capexEndRow)});
+    set(r, 4, amort_n,   S_CAPEX_N, {f: sumF(4, capexStartRow, capexEndRow)});
+    set(r, 5, amort_n1,  S_CAPEX_N, {f: sumF(5, capexStartRow, capexEndRow)});
+    set(r, 6, amort_n2,  S_CAPEX_N, {f: sumF(6, capexStartRow, capexEndRow)});
   } else { set(r, 1, 0, S_CAPEX_N); set(r, 4, 0, S_CAPEX_N); set(r, 5, 0, S_CAPEX_N); set(r, 6, 0, S_CAPEX_N); }
   r += 3;
 
@@ -8216,109 +8279,143 @@ function buildPnLSheet(p, sc) {
   // CA
   const pnlCaRow = r;
   set(r, 0, 'Chiffre d\'affaires', S_PNL_CA);
-  set(r, 1, 0, S_PNL_CA_N, {f: `B${tCA}`}); set(r, 2, 0, S_PNL_CA_N, {f: `C${tCA}`}); set(r, 3, 0, S_PNL_CA_N, {f: `D${tCA}`});
+  set(r, 1, ca_n_tot,  S_PNL_CA_N, {f: `B${tCA}`});
+  set(r, 2, ca_n1_tot, S_PNL_CA_N, {f: `C${tCA}`});
+  set(r, 3, ca_n2_tot, S_PNL_CA_N, {f: `D${tCA}`});
   r++;
 
   // (-) CV
   const pnlCvRow = r;
   set(r, 0, '  (-) Charges variables', S_PNL_NEG);
-  set(r, 1, 0, S_PNL_NEG_N, {f: `-B${tCV}`}); set(r, 2, 0, S_PNL_NEG_N, {f: `-C${tCV}`}); set(r, 3, 0, S_PNL_NEG_N, {f: `-D${tCV}`});
+  set(r, 1, -cv_n_tot,  S_PNL_NEG_N, {f: `-B${tCV}`});
+  set(r, 2, -cv_n1_tot, S_PNL_NEG_N, {f: `-C${tCV}`});
+  set(r, 3, -cv_n2_tot, S_PNL_NEG_N, {f: `-D${tCV}`});
   r++;
 
   // = MCV
+  const mcv_n  = ca_n_tot  - cv_n_tot;
+  const mcv_n1 = ca_n1_tot - cv_n1_tot;
+  const mcv_n2 = ca_n2_tot - cv_n2_tot;
   const pnlMcvRow = r;
   set(r, 0, '= Marge sur couts variables (MCV)', S_PNL_SUB);
-  set(r, 1, 0, S_PNL_SUB_N, {f: `B${pnlCaRow+1}+B${pnlCvRow+1}`});
-  set(r, 2, 0, S_PNL_SUB_N, {f: `C${pnlCaRow+1}+C${pnlCvRow+1}`});
-  set(r, 3, 0, S_PNL_SUB_N, {f: `D${pnlCaRow+1}+D${pnlCvRow+1}`});
+  set(r, 1, mcv_n,  S_PNL_SUB_N, {f: `B${pnlCaRow+1}+B${pnlCvRow+1}`});
+  set(r, 2, mcv_n1, S_PNL_SUB_N, {f: `C${pnlCaRow+1}+C${pnlCvRow+1}`});
+  set(r, 3, mcv_n2, S_PNL_SUB_N, {f: `D${pnlCaRow+1}+D${pnlCvRow+1}`});
   r++;
 
   // (-) MO directe
   const pnlModRow = r;
   set(r, 0, '  (-) Main d\'oeuvre directe', S_PNL_NEG);
-  set(r, 1, 0, S_PNL_NEG_N, {f: `-B${tMOD}`}); set(r, 2, 0, S_PNL_NEG_N, {f: `-C${tMOD}`}); set(r, 3, 0, S_PNL_NEG_N, {f: `-D${tMOD}`});
+  set(r, 1, -mod_n,  S_PNL_NEG_N, {f: `-B${tMOD}`});
+  set(r, 2, -mod_n1, S_PNL_NEG_N, {f: `-C${tMOD}`});
+  set(r, 3, -mod_n2, S_PNL_NEG_N, {f: `-D${tMOD}`});
   r++;
 
   // (-) Charges fixes directes
   const pnlCfdRow = r;
   set(r, 0, '  (-) Charges fixes directes', S_PNL_NEG);
-  set(r, 1, 0, S_PNL_NEG_N, {f: `-B${tCFD}`}); set(r, 2, 0, S_PNL_NEG_N, {f: `-C${tCFD}`}); set(r, 3, 0, S_PNL_NEG_N, {f: `-D${tCFD}`});
+  set(r, 1, -cfd_n,  S_PNL_NEG_N, {f: `-B${tCFD}`});
+  set(r, 2, -cfd_n1, S_PNL_NEG_N, {f: `-C${tCFD}`});
+  set(r, 3, -cfd_n2, S_PNL_NEG_N, {f: `-D${tCFD}`});
   r++;
 
   // = Marge brute
+  const mb_n  = mcv_n  - mod_n  - cfd_n;
+  const mb_n1 = mcv_n1 - mod_n1 - cfd_n1;
+  const mb_n2 = mcv_n2 - mod_n2 - cfd_n2;
   const pnlMbRow = r;
   set(r, 0, '= Marge brute', S_PNL_SUB);
-  set(r, 1, 0, S_PNL_SUB_N, {f: `B${pnlMcvRow+1}+B${pnlModRow+1}+B${pnlCfdRow+1}`});
-  set(r, 2, 0, S_PNL_SUB_N, {f: `C${pnlMcvRow+1}+C${pnlModRow+1}+C${pnlCfdRow+1}`});
-  set(r, 3, 0, S_PNL_SUB_N, {f: `D${pnlMcvRow+1}+D${pnlModRow+1}+D${pnlCfdRow+1}`});
+  set(r, 1, mb_n,  S_PNL_SUB_N, {f: `B${pnlMcvRow+1}+B${pnlModRow+1}+B${pnlCfdRow+1}`});
+  set(r, 2, mb_n1, S_PNL_SUB_N, {f: `C${pnlMcvRow+1}+C${pnlModRow+1}+C${pnlCfdRow+1}`});
+  set(r, 3, mb_n2, S_PNL_SUB_N, {f: `D${pnlMcvRow+1}+D${pnlModRow+1}+D${pnlCfdRow+1}`});
   r++;
 
   // (-) MO support
   const pnlMosRow = r;
   set(r, 0, '  (-) Main d\'oeuvre support', S_PNL_NEG);
-  set(r, 1, 0, S_PNL_NEG_N, {f: `-B${tMOS}`}); set(r, 2, 0, S_PNL_NEG_N, {f: `-C${tMOS}`}); set(r, 3, 0, S_PNL_NEG_N, {f: `-D${tMOS}`});
+  set(r, 1, -mos_n,  S_PNL_NEG_N, {f: `-B${tMOS}`});
+  set(r, 2, -mos_n1, S_PNL_NEG_N, {f: `-C${tMOS}`});
+  set(r, 3, -mos_n2, S_PNL_NEG_N, {f: `-D${tMOS}`});
   r++;
 
   // (-) Charges fixes indirectes
   const pnlCfiRow = r;
   set(r, 0, '  (-) Charges fixes indirectes', S_PNL_NEG);
-  set(r, 1, 0, S_PNL_NEG_N, {f: `-B${tCFI}`}); set(r, 2, 0, S_PNL_NEG_N, {f: `-C${tCFI}`}); set(r, 3, 0, S_PNL_NEG_N, {f: `-D${tCFI}`});
+  set(r, 1, -cfi_n,  S_PNL_NEG_N, {f: `-B${tCFI}`});
+  set(r, 2, -cfi_n1, S_PNL_NEG_N, {f: `-C${tCFI}`});
+  set(r, 3, -cfi_n2, S_PNL_NEG_N, {f: `-D${tCFI}`});
   r++;
 
   // = EBITDA
+  const ebitda_n  = mb_n  - mos_n  - cfi_n;
+  const ebitda_n1 = mb_n1 - mos_n1 - cfi_n1;
+  const ebitda_n2 = mb_n2 - mos_n2 - cfi_n2;
   const pnlEbitdaRow = r;
   set(r, 0, '= EBITDA', S_PNL_SUB);
-  set(r, 1, 0, S_PNL_SUB_N, {f: `B${pnlMbRow+1}+B${pnlMosRow+1}+B${pnlCfiRow+1}`});
-  set(r, 2, 0, S_PNL_SUB_N, {f: `C${pnlMbRow+1}+C${pnlMosRow+1}+C${pnlCfiRow+1}`});
-  set(r, 3, 0, S_PNL_SUB_N, {f: `D${pnlMbRow+1}+D${pnlMosRow+1}+D${pnlCfiRow+1}`});
+  set(r, 1, ebitda_n,  S_PNL_SUB_N, {f: `B${pnlMbRow+1}+B${pnlMosRow+1}+B${pnlCfiRow+1}`});
+  set(r, 2, ebitda_n1, S_PNL_SUB_N, {f: `C${pnlMbRow+1}+C${pnlMosRow+1}+C${pnlCfiRow+1}`});
+  set(r, 3, ebitda_n2, S_PNL_SUB_N, {f: `D${pnlMbRow+1}+D${pnlMosRow+1}+D${pnlCfiRow+1}`});
   r++;
 
   // (-) Amortissements
   const pnlAmortRow = r;
   set(r, 0, '  (-) Amortissements', S_PNL_NEG);
-  set(r, 1, 0, S_PNL_NEG_N, {f: `-E${tAMN}`}); set(r, 2, 0, S_PNL_NEG_N, {f: `-F${tAMN}`}); set(r, 3, 0, S_PNL_NEG_N, {f: `-G${tAMN}`});
+  set(r, 1, -amort_n,  S_PNL_NEG_N, {f: `-E${tAMN}`});
+  set(r, 2, -amort_n1, S_PNL_NEG_N, {f: `-F${tAMN}`});
+  set(r, 3, -amort_n2, S_PNL_NEG_N, {f: `-G${tAMN}`});
   r++;
 
   // = REX
+  const rex_n  = ebitda_n  - amort_n;
+  const rex_n1 = ebitda_n1 - amort_n1;
+  const rex_n2 = ebitda_n2 - amort_n2;
   const pnlRexRow = r;
   set(r, 0, '= RESULTAT D\'EXPLOITATION (REX)', S_PNL_RES);
-  set(r, 1, 0, S_PNL_RES_N, {f: `B${pnlEbitdaRow+1}+B${pnlAmortRow+1}`});
-  set(r, 2, 0, S_PNL_RES_N, {f: `C${pnlEbitdaRow+1}+C${pnlAmortRow+1}`});
-  set(r, 3, 0, S_PNL_RES_N, {f: `D${pnlEbitdaRow+1}+D${pnlAmortRow+1}`});
+  set(r, 1, rex_n,  S_PNL_RES_N, {f: `B${pnlEbitdaRow+1}+B${pnlAmortRow+1}`});
+  set(r, 2, rex_n1, S_PNL_RES_N, {f: `C${pnlEbitdaRow+1}+C${pnlAmortRow+1}`});
+  set(r, 3, rex_n2, S_PNL_RES_N, {f: `D${pnlEbitdaRow+1}+D${pnlAmortRow+1}`});
   r += 2;
 
   // ── Ratios (%) ──
   set(r, 0, 'RATIOS', S_PNL_HEAD); set(r, 1, `${y0}`, S_PNL_HEAD_Y); set(r, 2, `${y0+1}`, S_PNL_HEAD_Y); set(r, 3, `${y0+2}`, S_PNL_HEAD_Y);
   r++;
 
+  const safeRatio = (num, den) => den > 0 ? num/den : 0;
   const ratios = [
-    ['% Charges variables / CA', tCV, tCV, tCV, 'B','C','D'],
-    ['% MCV / CA', pnlMcvRow+1, pnlMcvRow+1, pnlMcvRow+1, 'B','C','D'],
-    ['% Marge brute / CA', pnlMbRow+1, pnlMbRow+1, pnlMbRow+1, 'B','C','D'],
-    ['% EBITDA / CA', pnlEbitdaRow+1, pnlEbitdaRow+1, pnlEbitdaRow+1, 'B','C','D'],
-    ['% REX / CA', pnlRexRow+1, pnlRexRow+1, pnlRexRow+1, 'B','C','D']
+    ['% Charges variables / CA', tCV,            -cv_n,    -cv_n1,    -cv_n2],
+    ['% MCV / CA',               pnlMcvRow+1,    mcv_n,    mcv_n1,    mcv_n2],
+    ['% Marge brute / CA',       pnlMbRow+1,     mb_n,     mb_n1,     mb_n2],
+    ['% EBITDA / CA',            pnlEbitdaRow+1, ebitda_n, ebitda_n1, ebitda_n2],
+    ['% REX / CA',               pnlRexRow+1,    rex_n,    rex_n1,    rex_n2]
   ];
-  ratios.forEach(([label, rN, rN1, rN2]) => {
+  ratios.forEach(([label, rN, vn, vn1, vn2]) => {
     set(r, 0, label, S_RAT_L);
-    set(r, 1, 0, S_RAT_N, {f: `IF(B${pnlCaRow+1}=0,0,B${rN}/B${pnlCaRow+1})`});
-    set(r, 2, 0, S_RAT_N, {f: `IF(C${pnlCaRow+1}=0,0,C${rN1}/C${pnlCaRow+1})`});
-    set(r, 3, 0, S_RAT_N, {f: `IF(D${pnlCaRow+1}=0,0,D${rN2}/D${pnlCaRow+1})`});
+    // CV ratio est en valeur absolue (le total CV est positif dans son tableau)
+    const isCv = label.startsWith('% Charges variables');
+    const num_n  = isCv ? cv_n_tot  : vn;
+    const num_n1 = isCv ? cv_n1_tot : vn1;
+    const num_n2 = isCv ? cv_n2_tot : vn2;
+    set(r, 1, safeRatio(num_n,  ca_n_tot ), S_RAT_N, {f: `IF(B${pnlCaRow+1}=0,0,B${rN}/B${pnlCaRow+1})`});
+    set(r, 2, safeRatio(num_n1, ca_n1_tot), S_RAT_N, {f: `IF(C${pnlCaRow+1}=0,0,C${rN}/C${pnlCaRow+1})`});
+    set(r, 3, safeRatio(num_n2, ca_n2_tot), S_RAT_N, {f: `IF(D${pnlCaRow+1}=0,0,D${rN}/D${pnlCaRow+1})`});
     r++;
   });
   r++;
 
   // ── CAPEX + Payback ──
   set(r, 0, 'CAPEX total investi', S_CAPEX_L);
-  set(r, 1, 0, S_CAPEX_N, {f: `B${totalCapexRow+1}`});
+  set(r, 1, capex_tot, S_CAPEX_N, {f: `B${totalCapexRow+1}`});
   r++;
 
+  const ebitdaMoy = (ebitda_n + ebitda_n1 + ebitda_n2) / 3;
   set(r, 0, 'EBITDA moyen 3 ans', S_CAPEX_L);
-  set(r, 1, 0, S_CAPEX_N, {f: `(B${pnlEbitdaRow+1}+C${pnlEbitdaRow+1}+D${pnlEbitdaRow+1})/3`});
+  set(r, 1, ebitdaMoy, S_CAPEX_N, {f: `(B${pnlEbitdaRow+1}+C${pnlEbitdaRow+1}+D${pnlEbitdaRow+1})/3`});
   const ebitdaMoyRow = r;
   r++;
 
   set(r, 0, 'Payback (ans)', S_CAPEX_L);
-  set(r, 1, 0, {...S_CAPEX_N, numFmt:FMT_DEC}, {f: `IF(B${ebitdaMoyRow+1}<=0,"N/A",B${ebitdaMoyRow}/B${ebitdaMoyRow+1})`});
+  const payback = ebitdaMoy > 0 ? capex_tot / ebitdaMoy : 0;
+  set(r, 1, payback, {...S_CAPEX_N, numFmt:FMT_DEC}, {f: `IF(B${ebitdaMoyRow+1}<=0,"N/A",B${ebitdaMoyRow}/B${ebitdaMoyRow+1})`});
   r++;
 
   // ── Sheet config ──
@@ -8339,6 +8436,7 @@ function exportPnLExcel() {
   if (typeof XLSX === 'undefined') { alert('Librairie XLSX non chargee. Rechargez la page.'); return; }
   const p = curProj(); if (!p) return;
   const wb = XLSX.utils.book_new();
+  wb.Workbook = { CalcPr: { fullCalcOnLoad: true } };
 
   (p.simulateur.scenarios||[]).forEach(sc => {
     const ws = buildPnLSheet(p, sc);
@@ -8354,6 +8452,7 @@ function exportPnLExcel() {
 function exportAllPnLExcel() {
   if (typeof XLSX === 'undefined') { alert('Librairie XLSX non chargee. Rechargez la page.'); return; }
   const wb = XLSX.utils.book_new();
+  wb.Workbook = { CalcPr: { fullCalcOnLoad: true } };
   const usedNames = {};
 
   STATE.projets.forEach(p => {
@@ -8379,6 +8478,7 @@ function exportProjetExcel() {
   if (typeof XLSX === 'undefined') { alert('Librairie XLSX non chargée. Rechargez la page.'); return; }
   const p = curProj(); if (!p) return;
   const wb = XLSX.utils.book_new();
+  wb.Workbook = { CalcPr: { fullCalcOnLoad: true } };
 
   // ── Onglet 1 : Cadrage ──
   const cadrage = [];
