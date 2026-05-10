@@ -5167,6 +5167,45 @@ if (!STATE.migrations.distribPnLRatiosV2) {
   try { Storage.save(STATE); } catch(e) {}
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// MIGRATION distribPnLOverheadV1 — Quote-part overhead industriel
+// Calibre EBITDA à 14 % du CA en ajoutant un poste CFI dynamique
+// (différence entre EBITDA actuel et 14 % × CA, par année et scénario)
+// ═══════════════════════════════════════════════════════════════════
+if (!STATE.migrations.distribPnLOverheadV1) {
+  const distrib = STATE.projets.find(p => p.id === 'distribution');
+  if (distrib && distrib.simulateur && distrib.simulateur.scenarios && typeof calcPnL === 'function') {
+    distrib.simulateur.scenarios.forEach(sc => {
+      // Calculer le P&L actuel (sans overhead)
+      const r = calcPnL(distrib, sc);
+      // Calculer l'overhead nécessaire pour ramener EBITDA à 14 % du CA
+      const targetRate = 0.14;
+      const overhead_n  = Math.max(0, r.n.ebitda  - r.n.ca  * targetRate);
+      const overhead_n1 = Math.max(0, r.n1.ebitda - r.n1.ca * targetRate);
+      const overhead_n2 = Math.max(0, r.n2.ebitda - r.n2.ca * targetRate);
+      // Ajouter le poste CFI (s'il n'existe pas déjà)
+      const overheadName = 'Quote-part overhead industriel (calibration EBITDA 14 %)';
+      const existing = sc.chargesFixeIndir.find(c => c.nom === overheadName);
+      if (existing) {
+        existing.val_n  = Math.round(overhead_n);
+        existing.val_n1 = Math.round(overhead_n1);
+        existing.val_n2 = Math.round(overhead_n2);
+      } else {
+        sc.chargesFixeIndir.push({
+          id: lid(),
+          nom: overheadName,
+          categorie: 'Production',
+          val_n:  Math.round(overhead_n),
+          val_n1: Math.round(overhead_n1),
+          val_n2: Math.round(overhead_n2)
+        });
+      }
+    });
+  }
+  STATE.migrations.distribPnLOverheadV1 = true;
+  try { Storage.save(STATE); } catch(e) {}
+}
+
 if (!STATE.migrations.distribPnLSLMV1) {
   const distrib = STATE.projets.find(p => p.id === 'distribution');
   if (distrib && distrib.simulateur) {
