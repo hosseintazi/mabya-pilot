@@ -8382,7 +8382,7 @@ function buildPnLSheet(p, sc) {
 
   const safeRatio = (num, den) => den > 0 ? num/den : 0;
   const ratios = [
-    ['% Charges variables / CA', tCV,            -cv_n,    -cv_n1,    -cv_n2],
+    ['% Charges variables / CA', tCV,            cv_n_tot, cv_n1_tot, cv_n2_tot],
     ['% MCV / CA',               pnlMcvRow+1,    mcv_n,    mcv_n1,    mcv_n2],
     ['% Marge brute / CA',       pnlMbRow+1,     mb_n,     mb_n1,     mb_n2],
     ['% EBITDA / CA',            pnlEbitdaRow+1, ebitda_n, ebitda_n1, ebitda_n2],
@@ -8390,14 +8390,9 @@ function buildPnLSheet(p, sc) {
   ];
   ratios.forEach(([label, rN, vn, vn1, vn2]) => {
     set(r, 0, label, S_RAT_L);
-    // CV ratio est en valeur absolue (le total CV est positif dans son tableau)
-    const isCv = label.startsWith('% Charges variables');
-    const num_n  = isCv ? cv_n_tot  : vn;
-    const num_n1 = isCv ? cv_n1_tot : vn1;
-    const num_n2 = isCv ? cv_n2_tot : vn2;
-    set(r, 1, safeRatio(num_n,  ca_n_tot ), S_RAT_N, {f: `IF(B${pnlCaRow+1}=0,0,B${rN}/B${pnlCaRow+1})`});
-    set(r, 2, safeRatio(num_n1, ca_n1_tot), S_RAT_N, {f: `IF(C${pnlCaRow+1}=0,0,C${rN}/C${pnlCaRow+1})`});
-    set(r, 3, safeRatio(num_n2, ca_n2_tot), S_RAT_N, {f: `IF(D${pnlCaRow+1}=0,0,D${rN}/D${pnlCaRow+1})`});
+    set(r, 1, safeRatio(vn,  ca_n_tot ), S_RAT_N, {f: `IF(B${pnlCaRow+1}=0,0,B${rN}/B${pnlCaRow+1})`});
+    set(r, 2, safeRatio(vn1, ca_n1_tot), S_RAT_N, {f: `IF(C${pnlCaRow+1}=0,0,C${rN}/C${pnlCaRow+1})`});
+    set(r, 3, safeRatio(vn2, ca_n2_tot), S_RAT_N, {f: `IF(D${pnlCaRow+1}=0,0,D${rN}/D${pnlCaRow+1})`});
     r++;
   });
   r++;
